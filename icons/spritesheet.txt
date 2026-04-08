@@ -1,0 +1,6 @@
+/* spritesheet.png · 128×64px · каждая иконка 64×64 */
+
+.icon-axe { background-position: -0px 0; }
+.icon-helm { background-position: -64px 0; }
+
+/* Быстрый список: axe=0, helm=64 */
