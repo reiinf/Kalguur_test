@@ -227,7 +227,7 @@ function dvInitGrid(){
     cameraRow:0,cameraCol:6,
     minRowVisible:0,
     generatedRows:0,selectedKey:null,
-    _genVer:'376g'
+    _genVer:'378a'
   };
   dv.grid.nodes[dvKey(6,0)]={col:6,row:0,type:'standard',biome:'stone',visited:true,jx:0,jy:0};
   dvGenChunk(dv.grid,1,DV_ROWS_AHEAD);
@@ -478,15 +478,11 @@ function dvRender(){
     const n=g.nodes[key];
     const{y}=dvNodeXY(key);
     if(y<-80||y>H+80)continue;
-    const dist=dvNodeDist(key);
     const isNeighbor=neighborKeys.has(key);
     if(n.visited){nodeStates[key]='visited';}
-    else if(dist<=lantern){
-      if(key===g.selectedKey) nodeStates[key]='selected';
-      else if(isNeighbor) nodeStates[key]='neighbor';
-      else nodeStates[key]='visible';
-    }
-    else if(dist<=lantern+1.5){nodeStates[key]='question';}
+    else if(key===g.selectedKey){nodeStates[key]='selected';}
+    else if(isNeighbor){nodeStates[key]='neighbor';}
+    else{nodeStates[key]='visible';}
   }
 
   // Видимые рёбра
@@ -784,7 +780,8 @@ function renderDelve(){
       '<button class="btn btn-sm" onclick="dvOpenInfo()" style="font-size:11px;padding:5px 10px">📋 Сведения</button>'+
       '<button class="tab-btn'+((vm==='map'||vm==='big')?' active':'')+'" onclick="dvSetViewMode(\'map\')" style="font-size:11px;padding:5px 10px">⛏️ Шахта</button>'+
       '<button class="btn btn-sm btn-p" onclick="openDelveUpgrades()" style="font-size:11px;padding:5px 10px">🔧 Улучшения</button>'+
-      '<button class="tab-btn" onclick="dvToggleFullscreen()" style="font-size:11px;padding:5px 10px;margin-left:auto">'+(isBig?'⊟ Меньше экран':'⊞ Больше экран')+'</button>'+
+      '<button class="btn btn-sm" onclick="dvEvacuate()" style="font-size:11px;padding:5px 10px;margin-left:auto">🚁 Эвакуация (200💰)</button>'+
+      '<button class="tab-btn" onclick="dvToggleFullscreen()" style="font-size:11px;padding:5px 10px">'+(isBig?'⊟ Меньше экран':'⊞ Больше экран')+'</button>'+
     '</div>';
 
   const infoBarHtml='<div id="delve-info-bar" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:rgba(0,0,0,.3);border:1px solid var(--brd);border-radius:4px;padding:5px 10px;font-size:15px;margin-bottom:6px;min-height:30px"></div>';
@@ -849,6 +846,34 @@ function _dvAttachCanvas(dv){
       if(bestKey)dvSelectNode(bestKey);
     };
   },50);
+}
+
+function dvEvacuate(){
+  const COST=200;
+  if(G.gold<COST){showN('Недостаточно золота! Нужно '+COST+'💰','red');return;}
+  if(_dv.animating){showN('Подождите окончания движения','red');return;}
+  G.gold-=COST;
+  const g=G.delve.grid;
+  // Находим центральную колонку среди видимых узлов текущего ряда
+  const centerCol=Math.round(DV_COLS/2);
+  // Ищем ближайший к центру незаблокированный узел в ряду игрока или соседних
+  let bestKey=null,bestDist=9999;
+  for(const key of Object.keys(g.nodes)){
+    const n=g.nodes[key];
+    if(Math.abs(n.row-g.playerRow)>2)continue;
+    const d=Math.abs(n.col-centerCol)+Math.abs(n.row-g.playerRow)*2;
+    if(d<bestDist){bestDist=d;bestKey=key;}
+  }
+  if(bestKey&&bestKey!==dvKey(g.playerCol,g.playerRow)){
+    const n=g.nodes[bestKey];
+    g.playerCol=n.col;g.playerRow=n.row;
+    g.cameraCol=n.col;g.cameraRow=n.row;
+    _dv.camTarget=n.row;_dv.camColTarget=n.col;
+  }
+  g.selectedKey=null;
+  updateRes();dvRender();dvUpdateInfoBar();
+  log('🚁 Эвакуация! -'+COST+'💰','ev');
+  showN('🚁 Эвакуирован на центр','ge');
 }
 
 function dvOpenInfo(){

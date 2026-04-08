@@ -1,7 +1,7 @@
 // constants.js — константы и данные
 // Зависимости: state.js (G), icons.js (gi)
 
-const VERSION="0.377";
+const VERSION="0.378";
 document.title="Картоходец v"+VERSION;
 document.querySelector(".ver").textContent="v"+VERSION;
   document.getElementById("page-title").textContent="Картоходец v"+VERSION;
