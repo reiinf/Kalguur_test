@@ -124,9 +124,9 @@ function dvGenNode(col,row){
   let r=Math.random()*total,type='standard';
   for(const w of weights){r-=w.w;if(r<=0){type=w.id;break;}}
   const biome=BIOME_TYPES[Math.floor(Math.random()*BIOME_TYPES.length)].id;
-  // Случайное смещение внутри ячейки: ±30% от размера ячейки
-  const jx=(Math.random()-0.5)*DV_CELL*0.6;
-  const jy=(Math.random()-0.5)*DV_CELL*0.5;
+  // Случайное смещение внутри ячейки: ±20% (было 30%) — меньше кучкования
+  const jx=(Math.random()-0.5)*DV_CELL*0.4;
+  const jy=(Math.random()-0.5)*DV_CELL*0.3;
   return{col,row,type,biome,visited:false,jx,jy};
 }
 
@@ -165,6 +165,16 @@ function dvGenChunk(grid,fromRow,toRow){
     }
     newCols.sort((a,b)=>a-b);
 
+    // Убираем узлы стоящие слишком близко (ближе 2 колонок друг к другу)
+    const MIN_COL_GAP=2;
+    for(let i=newCols.length-1;i>0;i--){
+      if(newCols[i]-newCols[i-1]<MIN_COL_GAP){
+        const keyToRemove=dvKey(newCols[i],row);
+        delete grid.nodes[keyToRemove];
+        newCols.splice(i,1);
+      }
+    }
+
     // 2. Горизонтальные рёбра внутри ряда (соседние, 50% шанс)
     for(let i=0;i<newCols.length-1;i++){
       if(Math.random()<0.5) dvAddEdge(grid,dvKey(newCols[i],row),dvKey(newCols[i+1],row));
@@ -179,17 +189,23 @@ function dvGenChunk(grid,fromRow,toRow){
 
     if(prevCols.length>0){
       // Spanning tree: соединяем каждый новый узел с ближайшим предыдущим
+      // Ограничение: только если расстояние <= 3 колонок (нет длинных линий)
+      const MAX_COL_DIST=3;
       const linkedPrev=new Set();
       for(const col of newCols){
         const near=prevCols.reduce((b,c)=>Math.abs(c-col)<Math.abs(b-col)?c:b,prevCols[0]);
-        dvAddEdge(grid,dvKey(near,row-1),dvKey(col,row));
-        linkedPrev.add(near);
+        if(Math.abs(near-col)<=MAX_COL_DIST){
+          dvAddEdge(grid,dvKey(near,row-1),dvKey(col,row));
+          linkedPrev.add(near);
+        }
       }
-      // Узлы предыдущего ряда без связи вниз — подключить
+      // Узлы предыдущего ряда без связи вниз — подключить если близко
       for(const pc of prevCols){
         if(linkedPrev.has(pc))continue;
         const near=newCols.reduce((b,c)=>Math.abs(c-pc)<Math.abs(b-pc)?c:b,newCols[0]);
-        dvAddEdge(grid,dvKey(pc,row-1),dvKey(near,row));
+        if(Math.abs(near-pc)<=MAX_COL_DIST){
+          dvAddEdge(grid,dvKey(pc,row-1),dvKey(near,row));
+        }
       }
     }
   }
@@ -237,8 +253,7 @@ function dvGetNeighbors(nodeId){
 }
 
 function dvLanternRadius(){
-  const lvl=G.delve.upgrades.lantern||0;
-  return 1.8+(lvl/20)*2.7; // в клетках сетки
+  return 999; // туман отключён — все узлы на экране видны
 }
 
 function dvNodeDist(nodeId){
@@ -906,4 +921,3 @@ function buyDelveUpgrade(id){
   save();
   openDelveUpgrades();
 }
-
