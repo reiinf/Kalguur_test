@@ -567,7 +567,7 @@ function completeAct(){
   const act=G.actRun.act;const g=ri(act.g[0],act.g[1]);G.gold+=g;G.stats.ge+=g;G.stats.ar++;G.actRun=null;
   // Acts give small self XP
   const xpGain=act.xp||Math.floor(xpAmt(1)*1.5);addXPSelf(xpGain);
-  log('🏕 '+act.nm+' завершён — +'+g+gi(16)+' +'+xpGain+'XP','ge');floatT('+'+g+gi(16),'#c8a96e');
+  log('🏕 '+act.nm+' завершён — +'+g+gi(16)+' +'+xpGain+'XP','ge');floatT('+'+g+gi(16),'#c8a96e');sfxGold();
   const btn=document.getElementById('abtn-'+act.id);if(btn)btn.disabled=false;
   const fill=document.getElementById('apf-'+act.id);if(fill)fill.style.width='0%';
   updateRes();
