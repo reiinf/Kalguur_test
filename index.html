@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="only light">
+<title id="page-title">Картоходец</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;900&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-WMX6M2GGE9"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-WMX6M2GGE9');
+</script>
+
+</head>
+<body>
+<div id="app">
+<header>
+  <h1>КАРТОХОДЕЦ <span class="ver" id="ver-span"></span></h1>
+  <a href="https://t.me/+8OaQWAGhzqE5ODdi" target="_blank" style="position:absolute;top:50%;right:10px;transform:translateY(-50%);text-decoration:none;opacity:0.7;transition:opacity .2s;line-height:1;display:inline-flex;align-items:center" title="Телеграм-канал" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.7"><svg width="22" height="22" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg"><path d="M250 500c138.071 0 250-111.929 250-250S388.071 0 250 0 0 111.929 0 250s111.929 250 250 250z" fill="#34aadf"/><path d="M104.047 247.832s125-51.3 168.352-69.364c16.619-7.225 72.977-30.347 72.977-30.347s26.012-10.115 23.844 14.451c-.723 10.116-6.503 45.52-12.283 83.815-8.671 54.191-18.064 113.439-18.064 113.439s-1.445 16.619-13.728 19.509-32.515-10.115-36.127-13.006c-2.891-2.167-54.191-34.682-72.977-50.578-5.058-4.335-10.838-13.005.722-23.121 26.012-23.844 57.081-53.468 75.867-72.254 8.671-8.671 17.341-28.902-18.786-4.336-51.3 35.405-101.878 68.642-101.878 68.642s-11.561 7.225-33.237.722c-21.677-6.502-46.966-15.173-46.966-15.173s-17.34-10.838 12.284-22.399z" fill="#fff"/></svg></a>
+</header>
+<div id="res-bar">
+  <div class="ri" id="ri-gold"><span class="ri-ico" id="ri-gold-ico">💰</span><div><span class="ri-lbl">ЗОЛОТО</span><span class="ri-val" id="r-gold">0</span></div></div>
+  <div class="ri" id="ri-maps-bar"><span class="ri-ico">🗺</span><div><span class="ri-lbl">КАРТЫ</span><span class="ri-val" id="r-maps">0</span></div></div>
+  <div class="ri" id="ri-items-bar"><span class="ri-ico">⚔️</span><div><span class="ri-lbl">ПРЕДМЕТЫ</span><span class="ri-val" id="r-items">0</span></div></div>
+  <div class="ri" id="ri-workers-bar"><span class="ri-ico">👥</span><div><span class="ri-lbl">РАБОТНИКИ</span><span class="ri-val" id="r-workers">0</span></div></div>
+  <div class="ri" id="ri-del-orbs-ri" style="display:none"><span class="ri-ico">🔮</span><div><span class="ri-lbl">СФЕРЫ</span><span class="ri-val" id="r-del-orbs">0</span></div></div>
+  <div class="ri" id="ri-del-spl-ri" style="display:none"><span class="ri-ico">👁</span><div><span class="ri-lbl">ОСКОЛКИ</span><span class="ri-val" id="r-del-spl">0</span></div></div>
+  <div class="ri" id="ri-sulphite-bar" style="display:none"><span class="ri-ico">⛽</span><div><span class="ri-lbl">СУЛЬФИТ</span><span class="ri-val" id="r-sulphite">0</span></div></div>
+  <div class="ri" id="ri-runs-bar" style="display:none"><span class="ri-ico">🔄</span><div><span class="ri-lbl">ПРОЙДЕНО</span><span class="ri-val" id="r-runs">0</span></div></div>
+  <div class="ri" id="ri-pres" style="display:none"><span class="ri-ico">✨</span><div><span class="ri-lbl">ПРЕСТИЖ</span><span class="ri-val" id="r-pres">0</span></div></div>
+  <div class="ri" id="ri-del-mode" style="display:none;border-color:#553366;background:rgba(60,0,80,.3)"><span class="ri-ico">👁</span><div><span class="ri-lbl" style="color:#aa66ff">ДЕЛИРИУМ</span></div></div>
+  <button id="btn-manual-save" onclick="openSaveModal()" style="margin-left:auto;background:linear-gradient(180deg,rgba(200,169,110,.15),rgba(200,169,110,.05));border:1px solid var(--gold-d);color:var(--gold);font-size:11px;font-family:'Cinzel',serif;padding:3px 10px;cursor:pointer;clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%);letter-spacing:1px" title="Сохранить прогресс">💾 СОХРАНИТЬ</button>
+  <button onclick="openSettings()" style="margin-left:6px;background:linear-gradient(180deg,rgba(100,120,160,.15),rgba(100,120,160,.05));border:1px solid #445;color:#99aacc;font-size:11px;font-family:'Cinzel',serif;padding:3px 10px;cursor:pointer;clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%);letter-spacing:1px" title="Настройки">⚙ НАСТРОЙКИ</button>
+</div>
+<div id="atlas-bar-wrap" style="display:none"><div id="atlas-bar">
+  <span class="pt-lbl">АТЛАС:</span>
+  <div class="pt-tiers" id="pt-tiers"></div>
+  <div id="voidstones-bar" style="display:none;margin-left:6px;gap:3px;align-items:center"></div>
+  <span id="pt-hint" class="dim" style="font-size:13px;margin-left:4px"></span>
+  <button id="btn-passive-tree" class="btn btn-sm" style="margin-left:auto;font-size:12px;display:none" onclick="openPassiveTree()">🌐 Дерево атласа</button>
+</div></div>
+<div id="layout">
+<!-- LEFT -->
+<div id="col-left">
+  <div class="panel" id="left-panel" style="padding:0;overflow:hidden;">
+    <div class="tabs">
+      <button class="tab-btn active" id="tabbtn-maps" data-tab="maps"><span class="tab-icon">🗺</span> КАРТЫ</button>
+      <button class="tab-btn" id="tabbtn-shop" data-tab="shop" style="display:none"><span class="tab-icon">🏪</span> ЛАВКА</button>
+      <button class="tab-btn" id="tabbtn-inv" data-tab="inv" style="display:none"><span class="tab-icon">🎒</span> СКЛАД</button>
+      <button class="tab-btn" id="tabbtn-atlas" data-tab="atlas" style="display:none"><span class="tab-icon">🌐</span> АТЛАС</button>
+      <button class="tab-btn" id="tabbtn-ach" data-tab="ach" style="display:none"><span class="tab-icon">🏆</span> АРХИВ</button>
+      <button class="tab-btn" id="tabbtn-upg" data-tab="upg" style="display:none"><span class="tab-icon">⚙</span> УЛУЧШ.</button>
+
+    </div>
+    <div id="tab-maps" class="tabpanel"></div>
+    <div id="tab-shop" class="tabpanel"></div>
+    <div id="tab-inv" class="tabpanel"></div>
+    
+    <div id="tab-atlas" class="tabpanel"></div>
+    <div id="tab-ach" class="tabpanel"></div>
+    <div id="tab-upg" class="tabpanel"></div>
+  </div>
+</div>
+<!-- CENTER -->
+<div>
+  <div id="self-sec">
+    <div class="ptitle">🧙 ВЫ — ИЗГНАННИК <span id="self-cls-badge" style="font-size:11px;color:var(--txt-d)"></span></div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <div id="self-portrait-wrap" style="flex-shrink:0;display:none">
+        <div class="portrait-frame" onclick="openSelfBigPortrait()" id="self-portrait-frame" style="width:64px;height:64px;cursor:pointer;">
+          <div class="portrait-inner" id="self-portrait-inner" style="width:58px;height:58px;top:3px;left:3px;">
+            <img id="self-portrait-img" src="" alt="" onerror="this.style.display='none'">
+            <span id="self-portrait-em" style="font-size:22px"></span>
+          </div>
+        </div>
+      </div>
+      <div style="flex:1;min-width:0">
+    <div id="cls-row" style="display:none;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+      <div><div class="tiny">КЛАСС</div><div style="display:flex;gap:4px;margin-top:2px" id="cls-btns" style="font-size:14px">
+        <button class="btn btn-sm" data-cls="warrior" id="cls-warrior">⚔️ Дикарь</button>
+        <button class="btn btn-sm" data-cls="mage" id="cls-mage">🔮 Ведьма</button>
+        <button class="btn btn-sm" data-cls="ranger" id="cls-ranger">🏹 Охотница</button>
+        <button class="btn btn-sm" data-cls="noble" id="cls-noble" style="display:none;border-color:#e8c020;color:#e8c020">👸 Дворянка</button>
+      </div></div>
+      <div id="inv-btn-wrap" style="display:none;margin-left:auto"><button class="btn btn-sm" id="btn-self-eq">🎒 Снаряжение</button></div>
+    </div>
+    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <div><div class="tiny">⚔️ УРОН</div><div class="gt" style="font-family:'Cinzel',serif;font-size:17px" id="s-dmg">5</div></div>
+      <div><div class="tiny">🛡 ВЫЖИВАЕМОСТЬ</div><div class="grnt" style="font-family:'Cinzel',serif;font-size:17px" id="s-surv">10</div></div>
+      <div><div class="tiny">✅ ШАНС</div><div style="font-family:'Cinzel',serif;font-size:14px" id="s-ch">—</div></div>
+      <div style="flex:1;min-width:120px"><div class="tiny">⭐ УРОВЕНЬ <span id="s-lvl-xp" style="color:var(--mag)"></span></div><div style="display:flex;align-items:center;gap:6px;margin-top:2px"><span class="gt" style="font-family:'Cinzel',serif;font-size:17px" id="s-lvl">0</span><button class="btn btn-sm btn-p" id="btn-self-lvlup" style="display:none;padding:2px 8px;font-size:13px">Повысить</button></div><div style="height:3px;background:var(--bg2);border:1px solid var(--brd);margin-top:3px;width:100%"><div id="s-xp-bar" style="height:100%;background:linear-gradient(90deg,#553388,#aa66ff);width:0%"></div></div></div>
+    </div>
+      </div><!-- /flex:1 info -->
+    </div><!-- /self-body -->
+  </div>
+  <div class="panel" id="center-panel" style="display:none;padding:0;overflow:hidden;">
+    <div id="center-tabs" style="border-bottom:none;margin-bottom:0">
+      <button class="tab-btn active" id="ctab-acts" onclick="switchCenterTab('acts')">🏕 АКТЫ</button>
+      <button class="tab-btn" id="ctab-portal" onclick="switchCenterTab('portal')" style="display:none">🌀 ПОРТАЛ КАРТЫ</button>
+      <button class="tab-btn" id="ctab-delve" onclick="switchCenterTab('delve')" style="display:none">⛏️ ШАХТА</button>
+      <button class="tab-btn" id="ctab-delirium" onclick="switchCenterTab('delirium')" style="display:none">🌫️ ДЕЛИРИУМ</button>
+    </div>
+    <div id="ctab-content-acts" style="display:block;padding:8px"><div id="acts-area"></div></div>
+    <div id="ctab-content-delve" style="display:none;padding:8px"><div id="delve-area"></div></div>
+    <template id="_delve_intro_tpl"><div style="background:rgba(0,20,40,.4);border:1px solid #224466;border-radius:6px;padding:14px 16px;font-size:13px;line-height:2;color:var(--txt-d)">Под картами Атласа скрываются бесконечные подземные тоннели.<br>Вы берёте вагонетку и спускаетесь в темноту — глубже, чем ходят обычные работники.<br><span style="color:#88ccff">Сульфит</span> — топливо, копится с карт. Чем глубже — тем дороже.&nbsp;<span style="color:#88aaff">Азурит</span> — самоцветы для улучшений.<br>Чем глубже — тем опаснее, но лучше <span style="color:var(--gold)">снаряжение</span> и больше <span style="color:var(--gold)">золота</span>.</div></template>
+    <div id="ctab-content-portal" style="display:none;padding:8px">
+      <div class="run-vis" style="justify-content:flex-start;align-items:stretch;"><div class="run-bg"></div><div class="run-con" id="run-con" style="flex:1;min-width:0;text-align:center;padding:8px;display:flex;flex-direction:column;justify-content:center;align-items:center;"><div class="dim" style="font-style:italic">Выберите карту слева</div></div><canvas id="map-canvas" width="160" height="160" style="flex:0 0 auto;align-self:center;margin:8px 8px 8px 0;border-radius:3px;opacity:0;transition:opacity .4s;pointer-events:none;border:1px solid var(--brd);position:relative;z-index:2"></canvas><div id="mc-stub" style="display:none;flex:0 0 auto;width:160px;height:160px;align-self:center;margin:8px 8px 8px 0;border-radius:3px;border:1px solid var(--brd);flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--txt-d);font-size:12px;text-align:center;"><div style="font-size:23px">🗺</div><div>Миникарта<br>в разработке</div></div></div>
+      <div class="prog-wrap" id="rpw" style="display:none">
+        <div class="prog-lbl"><span id="rpl">Прогресс</span><span id="rpp">0%</span></div>
+        <div class="prog-bar"><div class="prog-fill" id="rpf" style="width:0%"></div></div>
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px">
+        <button class="btn" id="btn-self-run">⚔ Пройти самому</button>
+        <div id="orb-btn-wrap" style="margin-top:4px"></div>
+        <button class="btn btn-r" id="btn-cancel-run" style="display:none">✖ Отступить</button>
+      </div>
+    </div>
+    <div id="ctab-content-delirium" style="display:none;padding:8px">
+      <div id="delirium-portal"></div>
+    </div>
+  </div>
+  <div class="panel" id="workers-panel" style="margin-top:8px;display:none">
+    <div class="ptitle" id="workers-panel-title">👥 РАБОТНИКИ <button class="btn btn-sm btn-p" id="btn-expedition">🗺 Экспедиция</button></div>
+    <div id="workers-list"></div>
+    <div id="contracts-panel" style="display:none"></div>
+    <div style="margin-top:7px" id="hire-btn-wrap"></div>
+  </div>
+</div>
+<!-- RIGHT -->
+<div id="col-right" style="display:none">
+  <div class="panel" id="log-panel" style="display:none">
+    <!-- Кожаная подложка -->
+    <div id="journal-fade-layer"></div>
+    <!-- Заголовок -->
+    <div class="journal-redesign-head">
+      <div class="journal-redesign-head-title">📜 ЖУРНАЛ<span onclick="openFishing()" title="..." style="font-size:14px;color:var(--txt-d);cursor:pointer;opacity:0.35;user-select:none;margin-left:auto" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.35'">🎣</span></div>
+    </div>
+    <!-- Свиток -->
+    <div class="journal-redesign-body" id="journal-scroll-block">
+      <div class="scroll-static">
+        <img id="scroll-static-img" src="" alt="">
+        <div class="scroll-static-content">
+          <div id="loot-log-redesign"></div>
+        </div>
+      </div>
+    </div>
+    <!-- Fallback: оригинальный loot-log (скрыт, показывается если свиток не загрузился) -->
+    <div id="loot-log" style="display:none"></div>
+  </div>
+  <div id="del-mode-panel" style="display:none;margin-top:8px;padding:8px;border:1px solid #553366;background:rgba(40,0,60,.2);text-align:center">
+    <div style="font-family:Cinzel,serif;color:#aa66ff;font-size:13px;margin-bottom:4px">👁 РЕЖИМ ДЕЛИРИУМА</div>
+    <div style="font-size:12px;color:var(--txt-d);margin-bottom:6px">Осколков: <span id="del-mode-spl" style="color:#cc88ff">0</span></div>
+    <button class="btn btn-sm" style="border-color:#553366;color:#aa66ff" id="btn-del-mode-exit">❌ Покинуть делириум</button>
+  </div>
+  <div id="prestige-panel" style="display:none;margin-top:8px;padding:8px;border:1px solid #553388;background:rgba(85,51,136,.15);text-align:center">
+    <div style="font-family:Cinzel,serif;color:#ffaa00;font-size:13px;margin-bottom:6px">✨ ВЫ ПРОШЛИ ВСЕ 16 ТИРОВ!</div>
+    <button class="btn btn-p" id="btn-prestige">✨ Возвышение — сброс с бонусом</button>
+  </div>
+  <div id="upgrades-panel" style="display:none"><div id="upgrades"></div></div>
+  <div class="panel" id="stats-panel" style="margin-top:8px;display:none">
+    <div class="ptitle" style="display:flex;align-items:center;justify-content:space-between">📊 СТАТИСТИКА</div>
+    <div id="stats-p" style="font-size:14px;line-height:2.1"></div>
+  </div>
+  <div class="panel" id="danger-panel" style="margin-top:8px;display:none">
+    <div class="ptitle">⚠️ ОПАСНО</div>
+    <button class="btn btn-r" style="width:100%" id="btn-reset">💀 Начать заново</button>
+  </div>
+</div>
+</div>
+</div>
+<div id="tt"></div>
+<div id="moverlay"><div id="mbox"><div class="mtl" id="mtl"></div><div id="mbd"></div></div></div>
+<div id="notif-area"></div>
+
+<script src="constants.js"></script>
+<script src="icons.js"></script>
+<script src="state.js"></script>
+<script src="utils.js"></script>
+<script src="mechanics.js"></script>
+<script src="ui-delve.js"></script>
+<script src="ui-delirium.js"></script>
+<script src="ui-journal.js"></script>
+<script src="ui-minimap.js"></script>
+<script src="ui-maps.js"></script>
+<script src="ui-shop.js"></script>
+<script src="ui-inv.js"></script>
+<script src="ui-workers.js"></script>
+<script src="ui-atlas.js"></script>
+<script src="ui-stats.js"></script>
+<script src="ui-equipment.js"></script>
+<script src="ui-debug.js"></script>
+<script src="ui-fishing.js"></script>
+<script src="ui-settings.js"></script>
+<script src="persistence.js"></script>
+<script src="events.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
