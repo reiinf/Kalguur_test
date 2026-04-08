@@ -2,7 +2,7 @@
 
 Контента на часа 3-4
 
-https://reiinf.github.io/Kalguur/
+https://reiinf.github.io/Kalguur_test/
 
 
 
