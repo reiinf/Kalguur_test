@@ -124,9 +124,9 @@ function dvGenNode(col,row){
   let r=Math.random()*total,type='standard';
   for(const w of weights){r-=w.w;if(r<=0){type=w.id;break;}}
   const biome=BIOME_TYPES[Math.floor(Math.random()*BIOME_TYPES.length)].id;
-  // Случайное смещение внутри ячейки: ±20% (было 30%) — меньше кучкования
-  const jx=(Math.random()-0.5)*DV_CELL*0.4;
-  const jy=(Math.random()-0.5)*DV_CELL*0.3;
+  // Случайное смещение внутри ячейки: ±30% от размера ячейки
+  const jx=(Math.random()-0.5)*DV_CELL*0.6;
+  const jy=(Math.random()-0.5)*DV_CELL*0.5;
   return{col,row,type,biome,visited:false,jx,jy};
 }
 
@@ -165,16 +165,6 @@ function dvGenChunk(grid,fromRow,toRow){
     }
     newCols.sort((a,b)=>a-b);
 
-    // Убираем узлы стоящие слишком близко (ближе 2 колонок друг к другу)
-    const MIN_COL_GAP=2;
-    for(let i=newCols.length-1;i>0;i--){
-      if(newCols[i]-newCols[i-1]<MIN_COL_GAP){
-        const keyToRemove=dvKey(newCols[i],row);
-        delete grid.nodes[keyToRemove];
-        newCols.splice(i,1);
-      }
-    }
-
     // 2. Горизонтальные рёбра внутри ряда (соседние, 50% шанс)
     for(let i=0;i<newCols.length-1;i++){
       if(Math.random()<0.5) dvAddEdge(grid,dvKey(newCols[i],row),dvKey(newCols[i+1],row));
@@ -189,23 +179,17 @@ function dvGenChunk(grid,fromRow,toRow){
 
     if(prevCols.length>0){
       // Spanning tree: соединяем каждый новый узел с ближайшим предыдущим
-      // Ограничение: только если расстояние <= 3 колонок (нет длинных линий)
-      const MAX_COL_DIST=3;
       const linkedPrev=new Set();
       for(const col of newCols){
         const near=prevCols.reduce((b,c)=>Math.abs(c-col)<Math.abs(b-col)?c:b,prevCols[0]);
-        if(Math.abs(near-col)<=MAX_COL_DIST){
-          dvAddEdge(grid,dvKey(near,row-1),dvKey(col,row));
-          linkedPrev.add(near);
-        }
+        dvAddEdge(grid,dvKey(near,row-1),dvKey(col,row));
+        linkedPrev.add(near);
       }
-      // Узлы предыдущего ряда без связи вниз — подключить если близко
+      // Узлы предыдущего ряда без связи вниз — подключить
       for(const pc of prevCols){
         if(linkedPrev.has(pc))continue;
         const near=newCols.reduce((b,c)=>Math.abs(c-pc)<Math.abs(b-pc)?c:b,newCols[0]);
-        if(Math.abs(near-pc)<=MAX_COL_DIST){
-          dvAddEdge(grid,dvKey(pc,row-1),dvKey(near,row));
-        }
+        dvAddEdge(grid,dvKey(pc,row-1),dvKey(near,row));
       }
     }
   }
@@ -227,7 +211,7 @@ function dvInitGrid(){
     cameraRow:0,cameraCol:6,
     minRowVisible:0,
     generatedRows:0,selectedKey:null,
-    _genVer:'378a'
+    _genVer:'376g'
   };
   dv.grid.nodes[dvKey(6,0)]={col:6,row:0,type:'standard',biome:'stone',visited:true,jx:0,jy:0};
   dvGenChunk(dv.grid,1,DV_ROWS_AHEAD);
@@ -253,7 +237,7 @@ function dvGetNeighbors(nodeId){
 }
 
 function dvLanternRadius(){
-  return 999; // туман отключён — все узлы на экране видны
+  return 999; // туман отключён
 }
 
 function dvNodeDist(nodeId){
@@ -478,11 +462,15 @@ function dvRender(){
     const n=g.nodes[key];
     const{y}=dvNodeXY(key);
     if(y<-80||y>H+80)continue;
+    const dist=dvNodeDist(key);
     const isNeighbor=neighborKeys.has(key);
     if(n.visited){nodeStates[key]='visited';}
-    else if(key===g.selectedKey){nodeStates[key]='selected';}
-    else if(isNeighbor){nodeStates[key]='neighbor';}
-    else{nodeStates[key]='visible';}
+    else if(dist<=lantern){
+      if(key===g.selectedKey) nodeStates[key]='selected';
+      else if(isNeighbor) nodeStates[key]='neighbor';
+      else nodeStates[key]='visible';
+    }
+    else if(dist<=lantern+1.5){nodeStates[key]='question';}
   }
 
   // Видимые рёбра
@@ -780,7 +768,7 @@ function renderDelve(){
       '<button class="btn btn-sm" onclick="dvOpenInfo()" style="font-size:11px;padding:5px 10px">📋 Сведения</button>'+
       '<button class="tab-btn'+((vm==='map'||vm==='big')?' active':'')+'" onclick="dvSetViewMode(\'map\')" style="font-size:11px;padding:5px 10px">⛏️ Шахта</button>'+
       '<button class="btn btn-sm btn-p" onclick="openDelveUpgrades()" style="font-size:11px;padding:5px 10px">🔧 Улучшения</button>'+
-      '<button class="btn btn-sm" onclick="dvEvacuate()" style="font-size:11px;padding:5px 10px;margin-left:auto">🚁 Эвакуация (200💰)</button>'+
+      '<button class="btn btn-sm" onclick="dvEvacuate()" style="font-size:11px;padding:5px 10px;margin-left:auto">Эвакуация (200'+gi(16)+')</button>'+
       '<button class="tab-btn" onclick="dvToggleFullscreen()" style="font-size:11px;padding:5px 10px">'+(isBig?'⊟ Меньше экран':'⊞ Больше экран')+'</button>'+
     '</div>';
 
@@ -850,13 +838,11 @@ function _dvAttachCanvas(dv){
 
 function dvEvacuate(){
   const COST=200;
-  if(G.gold<COST){showN('Недостаточно золота! Нужно '+COST+'💰','red');return;}
+  if(G.gold<COST){showN('Недостаточно золота! Нужно '+COST+gi(16),'red');return;}
   if(_dv.animating){showN('Подождите окончания движения','red');return;}
   G.gold-=COST;
   const g=G.delve.grid;
-  // Находим центральную колонку среди видимых узлов текущего ряда
   const centerCol=Math.round(DV_COLS/2);
-  // Ищем ближайший к центру незаблокированный узел в ряду игрока или соседних
   let bestKey=null,bestDist=9999;
   for(const key of Object.keys(g.nodes)){
     const n=g.nodes[key];
@@ -872,8 +858,8 @@ function dvEvacuate(){
   }
   g.selectedKey=null;
   updateRes();dvRender();dvUpdateInfoBar();
-  log('🚁 Эвакуация! -'+COST+'💰','ev');
-  showN('🚁 Эвакуирован на центр','ge');
+  log('Эвакуация! -'+COST+gi(16),'ev');
+  showN('Эвакуирован на центр','ge');
 }
 
 function dvOpenInfo(){
