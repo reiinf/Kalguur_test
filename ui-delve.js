@@ -127,10 +127,7 @@ function dvGenNode(col,row){
   let r=Math.random()*total,type='standard';
   for(const w of weights){r-=w.w;if(r<=0){type=w.id;break;}}
   const biome=BIOME_TYPES[Math.floor(Math.random()*BIOME_TYPES.length)].id;
-  // Случайное смещение внутри ячейки: ±30% от размера ячейки
-  const jx=(Math.random()-0.5)*DV_CELL_W*0.6;
-  const jy=(Math.random()-0.5)*DV_CELL_H*0.5;
-  return{col,row,type,biome,visited:false,jx,jy};
+  return{col,row,type,biome,visited:false,jx:0,jy:0};
 }
 
 function dvHasEdge(grid,a,b){
@@ -199,7 +196,10 @@ function dvGenChunk(grid,fromRow,toRow){
   // Стартовые фазы разные — пары не синхронизированы.
   const BRIDGE_EVERY=3;
   const bridges=[];
-  const pairPhase=[0, 2, 1, 0]; // фазы для 4 пар
+  // На первом чанке (fromRow===1) откладываем перемычки — чтобы они не уходили за экран сверху.
+  // Минимальный отступ: 3 строки от начала чанка, у каждой пары свой.
+  const isFirstChunk=fromRow===1;
+  const pairPhase=isFirstChunk?[3, 5, 4, 3]:[0, 2, 1, 0]; // фазы для 4 пар
   for(let i=0;i<4;i++){
     let row=fromRow+pairPhase[i];
     while(row<=toRow-1){ // toRow-1 гарантирует что rowB=row+1 <= toRow
@@ -238,11 +238,18 @@ function dvGenChunk(grid,fromRow,toRow){
     }
   }
 
-  // Подключаем первый чанк к стартовому узлу
+  // Подключаем первый чанк к стартовому узлу — только центральная и две соседние магистрали
   if(fromRow===1&&grid.nodes[dvKey(9,0)]){
-    for(let i=0;i<MAINS.length;i++){
+    for(let i=1;i<=3;i++){
       dvAddEdge(grid,dvKey(9,0),dvKey(mainPaths[i][1],1));
     }
+    // Крайние магистрали (0 и 4) соединяем с соседними на строке 1
+    const k0r1=dvKey(mainPaths[0][1],1);
+    const k1r1=dvKey(mainPaths[1][1],1);
+    const k3r1=dvKey(mainPaths[3][1],1);
+    const k4r1=dvKey(mainPaths[4][1],1);
+    if(grid.nodes[k0r1]&&grid.nodes[k1r1])dvAddEdge(grid,k0r1,k1r1);
+    if(grid.nodes[k3r1]&&grid.nodes[k4r1])dvAddEdge(grid,k3r1,k4r1);
   }
 
   // ── Шаг 4: создаём Z-перемычки ─────────────────────────────────────────
