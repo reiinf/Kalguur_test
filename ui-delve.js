@@ -194,12 +194,9 @@ function dvGenChunk(grid,fromRow,toRow){
   // ── Шаг 2: планируем перемычки заранее ─────────────────────────────────
   // Каждая пара соседних магистралей: гарантированная перемычка каждые 3 строки.
   // Стартовые фазы разные — пары не синхронизированы.
-  const BRIDGE_EVERY=3;
+  const BRIDGE_EVERY=4;
   const bridges=[];
-  // На первом чанке (fromRow===1) откладываем перемычки — чтобы они не уходили за экран сверху.
-  // Минимальный отступ: 3 строки от начала чанка, у каждой пары свой.
-  const isFirstChunk=fromRow===1;
-  const pairPhase=isFirstChunk?[3, 5, 4, 3]:[0, 2, 1, 0]; // фазы для 4 пар
+  const pairPhase=[0, 2, 1, 0]; // фазы для 4 пар
   for(let i=0;i<4;i++){
     let row=fromRow+pairPhase[i];
     while(row<=toRow-1){ // toRow-1 гарантирует что rowB=row+1 <= toRow
@@ -267,8 +264,8 @@ function dvGenChunk(grid,fromRow,toRow){
       const nd=dvGenNode(midCol,midRow);
       grid.nodes[kMid]={col:midCol,row:midRow,type:nd.type,biome:nd.biome,visited:false,jx:nd.jx,jy:nd.jy};
     }
-    if(grid.nodes[kA]&&kA!==kMid)dvAddEdge(grid,kA,kMid);
-    if(grid.nodes[kB]&&kB!==kMid)dvAddEdge(grid,kMid,kB);
+    if(grid.nodes[kA])dvAddEdge(grid,kA,kMid);
+    if(grid.nodes[kB])dvAddEdge(grid,kMid,kB);
   }
 
   // ── Шаг 5: случайные узлы в пустотах ──────────────────────────────────
