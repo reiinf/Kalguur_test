@@ -103,10 +103,13 @@ const BIOME_TYPES=[
   {id:'crystal', nm:'Кристальная пещера',col:'#101820', mods:{}},
 ];
 
-const DV_COLS=13;      // колонок (шире экрана — влево/вправо)
+const DV_COLS=19;      // колонок (шире экрана — влево/вправо)
 const DV_ROWS_AHEAD=12; // рядов вперёд
-const DV_CELL=70;      // размер ячейки в пикселях (квадрат)
-const DV_FILL=0.30;    // вероятность узла в ячейке
+const DV_CELL_W=70;    // ширина ячейки в пикселях
+const DV_CELL_H=90;    // высота ячейки в пикселях
+const DV_CELL=DV_CELL_W; // псевдоним для совместимости (не используется в координатах)
+const DV_FILL=0.18;    // вероятность узла в ячейке
+const DV_MAX_GAP=4;    // максимальный gap между узлами в ряду (колонок)
 
 // ── DELVE GRID GENERATION ─────────────────────────────────────────────────
 // Сетка col/row. Узлы не в каждой клетке — разреженная расстановка.
@@ -125,8 +128,8 @@ function dvGenNode(col,row){
   for(const w of weights){r-=w.w;if(r<=0){type=w.id;break;}}
   const biome=BIOME_TYPES[Math.floor(Math.random()*BIOME_TYPES.length)].id;
   // Случайное смещение внутри ячейки: ±30% от размера ячейки
-  const jx=(Math.random()-0.5)*DV_CELL*0.6;
-  const jy=(Math.random()-0.5)*DV_CELL*0.5;
+  const jx=(Math.random()-0.5)*DV_CELL_W*0.6;
+  const jy=(Math.random()-0.5)*DV_CELL_H*0.5;
   return{col,row,type,biome,visited:false,jx,jy};
 }
 
@@ -139,60 +142,195 @@ function dvAddEdge(grid,a,b){
 }
 
 function dvGenChunk(grid,fromRow,toRow){
-  // PoE-стиль: каждая ячейка заполняется с вероятностью DV_FILL.
-  // Связность: spanning tree — от каждого узла гарантирован путь к стартовому.
-  // Тоннели: между соседними узлами (по горизонтали или вертикали), L-образные визуально.
+  // Полная переработка: генерируем весь чанк за один проход без привязки к движению игрока.
+  // 4 магистрали, Z/L шаги, перемычки запланированы заранее, узлы только с 2+ соседями.
 
+  const MAINS=[
+    {center:1,  min:0,  max:3},
+    {center:5,  min:3,  max:7},
+    {center:9,  min:7,  max:11},
+    {center:13, min:11, max:15},
+    {center:17, min:15, max:18},
+  ];
+  const nRows=toRow-fromRow+1;
+
+  // Восстанавливаем позиции магистралей из предыдущего чанка
+  if(!grid._mainCols) grid._mainCols=MAINS.map(m=>m.center);
+  const mainCols=[...grid._mainCols];
+
+  // ── Шаг 1: строим траектории всех магистралей сразу ────────────────────
+  // mainPaths[i][row] = col — позиция магистрали i на каждой строке
+  const mainPaths=MAINS.map(()=>({}));
+
+  for(let i=0;i<MAINS.length;i++){
+    const m=MAINS[i];
+    let col=mainCols[i]; // стартуем точно с позиции конца предыдущего чанка
+    // Направление: меняем каждые 1-3 строки
+    let dir=Math.random()<0.5?1:-1;
+    let stepsLeft=1+Math.floor(Math.random()*2);
+    for(let row=fromRow;row<=toRow;row++){
+      mainPaths[i][row]=col; // сначала фиксируем текущую позицию
+      stepsLeft--;
+      if(stepsLeft<=0){
+        const distToCenter=col-m.center;
+        if(Math.abs(distToCenter)>=2) dir=-Math.sign(distToCenter);
+        else dir=Math.random()<0.5?1:-1;
+        stepsLeft=1+Math.floor(Math.random()*2);
+      }
+      // Шагаем для СЛЕДУЮЩЕЙ строки
+      let next=col+dir;
+      next=Math.max(m.min,Math.min(m.max,next));
+      col=next;
+    }
+  }
+
+  // Применяем минимальное расстояние 2 между соседними магистралями на каждой строке
   for(let row=fromRow;row<=toRow;row++){
-    // 1. Случайно заполняем ячейки
-    const newCols=[];
-    for(let col=0;col<DV_COLS;col++){
-      if(Math.random()<DV_FILL){
-        if(!grid.nodes[dvKey(col,row)]){
-          grid.nodes[dvKey(col,row)]=dvGenNode(col,row);
+    const cols=MAINS.map((_,i)=>mainPaths[i][row]);
+    for(let i=1;i<MAINS.length;i++){if(cols[i]<=cols[i-1]+1)cols[i]=cols[i-1]+2;}
+    for(let i=MAINS.length-2;i>=0;i--){if(cols[i]>=cols[i+1]-1)cols[i]=cols[i+1]-2;}
+    for(let i=0;i<MAINS.length;i++){
+      mainPaths[i][row]=Math.max(MAINS[i].min,Math.min(MAINS[i].max,cols[i]));
+    }
+  }
+
+  // ── Шаг 2: планируем перемычки заранее ─────────────────────────────────
+  // Каждая пара соседних магистралей: гарантированная перемычка каждые 3 строки.
+  // Стартовые фазы разные — пары не синхронизированы.
+  const BRIDGE_EVERY=3;
+  const bridges=[];
+  const pairPhase=[0, 2, 1, 0]; // фазы для 4 пар
+  for(let i=0;i<4;i++){
+    let row=fromRow+pairPhase[i];
+    while(row<=toRow-1){ // toRow-1 гарантирует что rowB=row+1 <= toRow
+      bridges.push({pair:i, rowA:row, rowMid:row, rowB:row+1});
+      row+=BRIDGE_EVERY;
+    }
+  }
+
+  // ── Шаг 3: создаём узлы магистралей и рёбра ────────────────────────────
+  for(let i=0;i<MAINS.length;i++){
+    for(let row=fromRow;row<=toRow;row++){
+      const col=mainPaths[i][row];
+      const k=dvKey(col,row);
+      if(!grid.nodes[k]){
+        const nd=dvGenNode(col,row);
+        grid.nodes[k]={col,row,type:nd.type,biome:nd.biome,visited:false,jx:nd.jx,jy:nd.jy,_main:i};
+      }
+      // Ребро к предыдущей строке этой магистрали
+      if(row>fromRow){
+        const prevCol=mainPaths[i][row-1];
+        const prevK=dvKey(prevCol,row-1);
+        if(grid.nodes[prevK])dvAddEdge(grid,prevK,k);
+      } else if(row===fromRow&&fromRow>1){
+        // Связь с предыдущим чанком — ищем узел магистрали i в строке fromRow-1
+        // _mainCols[i] == mainPaths[i][fromRow] (стартуем с той же позиции)
+        const prevK=dvKey(mainCols[i],fromRow-1);
+        if(grid.nodes[prevK])dvAddEdge(grid,prevK,k);
+        else{
+          // fallback: ищем любой узел этой магистрали в предыдущей строке
+          for(let dc=-2;dc<=2;dc++){
+            const fk=dvKey(mainCols[i]+dc,fromRow-1);
+            if(grid.nodes[fk]){dvAddEdge(grid,fk,k);break;}
+          }
         }
-        newCols.push(col);
-      }
-    }
-
-    // Гарантируем хотя бы 2 узла в ряду
-    while(newCols.length<2){
-      const col=Math.floor(Math.random()*DV_COLS);
-      if(!newCols.includes(col)){
-        if(!grid.nodes[dvKey(col,row)]) grid.nodes[dvKey(col,row)]=dvGenNode(col,row);
-        newCols.push(col);
-      }
-    }
-    newCols.sort((a,b)=>a-b);
-
-    // 2. Горизонтальные рёбра внутри ряда (соседние, 50% шанс)
-    for(let i=0;i<newCols.length-1;i++){
-      if(Math.random()<0.5) dvAddEdge(grid,dvKey(newCols[i],row),dvKey(newCols[i+1],row));
-    }
-
-    // 3. Вертикальные рёбра к предыдущему ряду — spanning tree
-    // Для каждого нового узла ищем ближайший узел в предыдущем ряду
-    const prevCols=[];
-    for(let c=0;c<DV_COLS;c++){
-      if(grid.nodes[dvKey(c,row-1)])prevCols.push(c);
-    }
-
-    if(prevCols.length>0){
-      // Spanning tree: соединяем каждый новый узел с ближайшим предыдущим
-      const linkedPrev=new Set();
-      for(const col of newCols){
-        const near=prevCols.reduce((b,c)=>Math.abs(c-col)<Math.abs(b-col)?c:b,prevCols[0]);
-        dvAddEdge(grid,dvKey(near,row-1),dvKey(col,row));
-        linkedPrev.add(near);
-      }
-      // Узлы предыдущего ряда без связи вниз — подключить
-      for(const pc of prevCols){
-        if(linkedPrev.has(pc))continue;
-        const near=newCols.reduce((b,c)=>Math.abs(c-pc)<Math.abs(b-pc)?c:b,newCols[0]);
-        dvAddEdge(grid,dvKey(pc,row-1),dvKey(near,row));
       }
     }
   }
+
+  // Подключаем первый чанк к стартовому узлу
+  if(fromRow===1&&grid.nodes[dvKey(9,0)]){
+    for(let i=0;i<MAINS.length;i++){
+      dvAddEdge(grid,dvKey(9,0),dvKey(mainPaths[i][1],1));
+    }
+  }
+
+  // ── Шаг 4: создаём Z-перемычки ─────────────────────────────────────────
+  // ── Шаг 4: создаём Z-перемычки ─────────────────────────────────────────
+  for(const br of bridges){
+    const i=br.pair;
+    const colA=mainPaths[i][br.rowA];
+    const colB=mainPaths[i+1][br.rowB];
+    const midCol=Math.round((colA+colB)/2);
+    const midRow=br.rowMid;
+    const kA=dvKey(colA,br.rowA);
+    const kMid=dvKey(midCol,midRow);
+    const kB=dvKey(colB,br.rowB);
+    if(!grid.nodes[kMid]){
+      const nd=dvGenNode(midCol,midRow);
+      grid.nodes[kMid]={col:midCol,row:midRow,type:nd.type,biome:nd.biome,visited:false,jx:nd.jx,jy:nd.jy};
+    }
+    if(grid.nodes[kA]&&kA!==kMid)dvAddEdge(grid,kA,kMid);
+    if(grid.nodes[kB]&&kB!==kMid)dvAddEdge(grid,kMid,kB);
+  }
+
+  // ── Шаг 5: случайные узлы в пустотах ──────────────────────────────────
+  for(let row=fromRow;row<=toRow;row++){
+    for(let col=0;col<DV_COLS;col++){
+      const k=dvKey(col,row);
+      if(grid.nodes[k])continue;
+      if(Math.random()>0.08)continue;
+      // Собираем соседей в радиусе 1 строки и 3 колонки — разделяем по стороне
+      const above=[],below=[],left=[],right=[];
+      for(let dr=-1;dr<=1;dr++){
+        for(let dc=-3;dc<=3;dc++){
+          if(dr===0&&dc===0)continue;
+          const ck=dvKey(col+dc,row+dr);
+          if(!grid.nodes[ck])continue;
+          if(dr<0)above.push(ck);
+          else if(dr>0)below.push(ck);
+          else if(dc<0)left.push(ck);
+          else right.push(ck);
+        }
+      }
+      // Нужны соседи минимум с 2 разных сторон (не два с одной)
+      const sidesWithNeighbors=[above,below,left,right].filter(s=>s.length>0);
+      if(sidesWithNeighbors.length<2)continue;
+      const nd=dvGenNode(col,row);
+      grid.nodes[k]={col,row,type:nd.type,biome:nd.biome,visited:false,jx:nd.jx,jy:nd.jy};
+      // Подключаем к ближайшему по каждой стороне чтобы не было тупика
+      const byDist=(arr)=>arr.sort((a,b)=>{
+        const na=grid.nodes[a],nb=grid.nodes[b];
+        return (Math.abs(na.col-col)+Math.abs(na.row-row))-(Math.abs(nb.col-col)+Math.abs(nb.row-row));
+      });
+      const sides=sidesWithNeighbors.map(s=>byDist(s)[0]);
+      // Берём минимум 1, максимум 2 разных стороны
+      const picked=new Set();
+      for(const sk of sides){if(picked.size>=2)break;picked.add(sk);}
+      for(const sk of picked)dvAddEdge(grid,k,sk);
+    }
+  }
+
+  // ── Шаг 6: BFS-страховка ───────────────────────────────────────────────
+  // Находим главный компонент (от посещённого или первого узла).
+  // Маленькие изолированные острова (≤3 узла) удаляем — они создают дыры.
+  // Большие острова (>3) подключаем к ближайшему узлу главного компонента.
+  const allKeys=Object.keys(grid.nodes);
+  const root=allKeys.find(k=>grid.nodes[k].visited)||allKeys[0];
+  const vis=new Set([root]);const bfsQ=[root];
+  while(bfsQ.length){const cur=bfsQ.shift();for(const[a,b] of grid.edges){if(a===cur&&!vis.has(b)){vis.add(b);bfsQ.push(b);}else if(b===cur&&!vis.has(a)){vis.add(a);bfsQ.push(a);}}}
+  // Находим все изолированные компоненты
+  const isolated=allKeys.filter(k=>!vis.has(k));
+  const compVisited=new Set();
+  for(const startKey of isolated){
+    if(compVisited.has(startKey))continue;
+    // BFS внутри изолированного компонента
+    const comp=[startKey];compVisited.add(startKey);const q=[startKey];
+    while(q.length){const cur=q.shift();for(const[a,b] of grid.edges){if(a===cur&&!compVisited.has(b)&&!vis.has(b)){compVisited.add(b);comp.push(b);q.push(b);}else if(b===cur&&!compVisited.has(a)&&!vis.has(a)){compVisited.add(a);comp.push(a);q.push(a);}}}
+    if(comp.length<=3){
+      // Маленький остров — удаляем узлы и рёбра
+      for(const k of comp)delete grid.nodes[k];
+      grid.edges=grid.edges.filter(([a,b])=>grid.nodes[a]&&grid.nodes[b]);
+    }else{
+      // Большой остров — подключаем к главному компоненту
+      let bestKey=null,bestVk=null,bestDist=9999;
+      for(const k of comp){const n=grid.nodes[k];for(const vk of vis){const vn=grid.nodes[vk];const d=Math.abs(vn.col-n.col)+Math.abs(vn.row-n.row);if(d<bestDist){bestDist=d;bestKey=k;bestVk=vk;}}}
+      if(bestKey&&bestVk){dvAddEdge(grid,bestKey,bestVk);for(const k of comp)vis.add(k);}
+    }
+  }
+
+  // Сохраняем финальные позиции магистралей для следующего чанка
+  grid._mainCols=MAINS.map((_,i)=>mainPaths[i][toRow]);
   grid.generatedRows=toRow+1;
 }
 
@@ -200,20 +338,23 @@ function dvGenChunk(grid,fromRow,toRow){
 function dvEnsureGenerated(){
   const g=G.delve.grid;
   const needed=g.playerRow+DV_ROWS_AHEAD;
-  if(g.generatedRows<=needed) dvGenChunk(g,g.generatedRows,needed);
+  // Генерируем фиксированными чанками по DV_ROWS_AHEAD строк — чтобы перемычки всегда помещались
+  while(g.generatedRows<=needed){
+    dvGenChunk(g,g.generatedRows,g.generatedRows+DV_ROWS_AHEAD-1);
+  }
 }
 
 function dvInitGrid(){
   const dv=G.delve;
   dv.grid={
     nodes:{},edges:[],
-    playerCol:6,playerRow:0,
-    cameraRow:0,cameraCol:6,
+    playerCol:9,playerRow:0,
+    cameraRow:0,cameraCol:9,
     minRowVisible:0,
-    generatedRows:0,selectedKey:null,
-    _genVer:'376g'
+    generatedRows:1,selectedKey:null,
+    _genVer:'378g'
   };
-  dv.grid.nodes[dvKey(6,0)]={col:6,row:0,type:'standard',biome:'stone',visited:true,jx:0,jy:0};
+  dv.grid.nodes[dvKey(9,0)]={col:9,row:0,type:'standard',biome:'stone',visited:true,jx:0,jy:0};
   dvGenChunk(dv.grid,1,DV_ROWS_AHEAD);
 }
 
@@ -257,13 +398,12 @@ function dvNodeXY(nodeId){
   const n=g.nodes[nodeId];
   if(!n)return{x:0,y:0};
   const{W,H}=dvCanvasSize();
-  const cell=DV_CELL;
   const camRow=g.cameraRow||0;
   const camCol=g.cameraCol!==undefined?g.cameraCol:6;
   const jx=n.jx||0, jy=n.jy||0;
   return{
-    x: W/2+(n.col-camCol)*cell+jx,
-    y: H*0.12+(n.row-camRow+0.5)*cell+jy
+    x: W/2+(n.col-camCol)*DV_CELL_W+jx,
+    y: H*0.12+(n.row-camRow+0.5)*DV_CELL_H+jy
   };
 }
 
@@ -769,6 +909,7 @@ function renderDelve(){
       '<button class="tab-btn'+((vm==='map'||vm==='big')?' active':'')+'" onclick="dvSetViewMode(\'map\')" style="font-size:11px;padding:5px 10px">⛏️ Шахта</button>'+
       '<button class="btn btn-sm btn-p" onclick="openDelveUpgrades()" style="font-size:11px;padding:5px 10px">🔧 Улучшения</button>'+
       '<button class="btn btn-sm" onclick="dvEvacuate()" style="font-size:11px;padding:5px 10px;margin-left:auto">Эвакуация (200'+gi(16)+')</button>'+
+      '<button class="btn btn-sm" onclick="dvRegenGrid()" style="font-size:11px;padding:5px 10px;background:#2a1a00;border-color:#554400">🔄 Пересоздать</button>'+
       '<button class="tab-btn" onclick="dvToggleFullscreen()" style="font-size:11px;padding:5px 10px">'+(isBig?'⊟ Меньше экран':'⊞ Больше экран')+'</button>'+
     '</div>';
 
@@ -834,6 +975,16 @@ function _dvAttachCanvas(dv){
       if(bestKey)dvSelectNode(bestKey);
     };
   },50);
+}
+
+function dvRegenGrid(){
+  const dv=G.delve;
+  dv.depth=0;
+  dvInitGrid();
+  renderDelve();
+  save();
+  log('🔄 Шахта пересоздана','info');
+  showN('Шахта пересоздана','ge');
 }
 
 function dvEvacuate(){
