@@ -262,17 +262,33 @@ function dvGenChunk(grid,fromRow,toRow){
     const kB=dvKey(colB,br.rowB);
     if(!grid.nodes[kMid]){
       const nd=dvGenNode(midCol,midRow);
-      grid.nodes[kMid]={col:midCol,row:midRow,type:nd.type,biome:nd.biome,visited:false,jx:nd.jx,jy:nd.jy};
+      grid.nodes[kMid]={col:midCol,row:midRow,type:nd.type,biome:nd.biome,visited:false,jx:nd.jx,jy:nd.jy,_bridge:true};
+    } else {
+      grid.nodes[kMid]._bridge=true;
     }
     if(grid.nodes[kA])dvAddEdge(grid,kA,kMid);
     if(grid.nodes[kB])dvAddEdge(grid,kMid,kB);
   }
 
   // ── Шаг 5: случайные узлы в пустотах ──────────────────────────────────
+  // Запрещённые клетки — пути L-тоннелей магистралей (промежуточные клетки)
+  const _tunnelCells=new Set();
+  for(let i=0;i<MAINS.length;i++){
+    for(let row=fromRow;row<=toRow;row++){
+      if(row===fromRow)continue;
+      const col=mainPaths[i][row];
+      const prevCol=mainPaths[i][row-1];
+      if(col===prevCol)continue; // вертикальный — нет горизонтального пути
+      // L-тоннель: горизонталь на уровне prevRow от prevCol до col
+      const minC=Math.min(col,prevCol), maxC=Math.max(col,prevCol);
+      for(let c=minC+1;c<maxC;c++) _tunnelCells.add(dvKey(c,row-1));
+    }
+  }
   for(let row=fromRow;row<=toRow;row++){
     for(let col=0;col<DV_COLS;col++){
       const k=dvKey(col,row);
       if(grid.nodes[k])continue;
+      if(_tunnelCells.has(k))continue; // на пути тоннеля — пропускаем
       if(Math.random()>0.08)continue;
       // Собираем соседей в радиусе 1 строки и 3 колонки — разделяем по стороне
       const above=[],below=[],left=[],right=[];
@@ -291,7 +307,7 @@ function dvGenChunk(grid,fromRow,toRow){
       const sidesWithNeighbors=[above,below,left,right].filter(s=>s.length>0);
       if(sidesWithNeighbors.length<2)continue;
       const nd=dvGenNode(col,row);
-      grid.nodes[k]={col,row,type:nd.type,biome:nd.biome,visited:false,jx:nd.jx,jy:nd.jy};
+      grid.nodes[k]={col,row,type:nd.type,biome:nd.biome,visited:false,jx:nd.jx,jy:nd.jy,_rand:true};
       // Подключаем к ближайшему по каждой стороне чтобы не было тупика
       const byDist=(arr)=>arr.sort((a,b)=>{
         const na=grid.nodes[a],nb=grid.nodes[b];
@@ -771,10 +787,27 @@ function dvGo(){
   const target=g.nodes[g.selectedKey];
   if(!target){showN('Узел не найден!','red');return;}
 
-  // Только по рёбрам
-  const neighbors=dvGetNeighbors(dvKey(g.playerCol,g.playerRow));
+  // Только по рёбрам — прямые соседи или через узел-перемычку (_bridge)
+  const playerKey=dvKey(g.playerCol,g.playerRow);
+  const playerNode=g.nodes[playerKey];
+  const neighbors=dvGetNeighbors(playerKey);
   const isNeighbor=neighbors.some(n=>dvKey(n.col,n.row)===g.selectedKey);
-  if(!isNeighbor){showN('Можно ехать только в соседние узлы!');return;}
+  const targetNode=g.nodes[g.selectedKey];
+  // Общая функция: есть ли узел X соединённый рёбрами и с игроком и с целью
+  const neighborKeys=new Set(neighbors.map(n=>dvKey(n.col,n.row)));
+  const targetNeighborKeys=new Set(dvGetNeighbors(g.selectedKey).map(n=>dvKey(n.col,n.row)));
+  const hasCommonNeighbor=[...neighborKeys].some(k=>targetNeighborKeys.has(k));
+
+  // Случай 1: цель является bridge, есть общий сосед по рёбрам
+  const targetIsBridge=!isNeighbor&&!!(targetNode&&targetNode._bridge)&&hasCommonNeighbor;
+  // Случай 2: игрок стоит на bridge, есть общий сосед по рёбрам
+  const playerIsBridge=!isNeighbor&&!!(playerNode&&playerNode._bridge)&&hasCommonNeighbor;
+  // Случай 3: цель является rand, есть общий сосед по рёбрам
+  const targetIsRand=!isNeighbor&&!!(targetNode&&targetNode._rand)&&hasCommonNeighbor;
+  // Случай 4: игрок стоит на rand, есть общий сосед по рёбрам
+  const playerIsRand=!isNeighbor&&!!(playerNode&&playerNode._rand)&&hasCommonNeighbor;
+  const isBridgeJump=targetIsBridge||playerIsBridge||targetIsRand||playerIsRand;
+  if(!isNeighbor&&!isBridgeJump){showN('Можно ехать только в соседние узлы!');return;}
 
   const rowDiff=Math.max(0,target.row-g.playerRow);
   const colDiff=Math.abs(target.col-g.playerCol);
