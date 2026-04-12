@@ -159,6 +159,48 @@ function passiveVal(stat){
   return total;
 }
 
+// Поднимает стартовую глубину шахты до уровня пройденного тира карт
+function dvUpdateMinDepth(tier){
+  if(!G.delve)return;
+  const minDepth=(Math.max(1,tier)-1)*10;
+  if(G.delve.depth>=minDepth)return;
+  G.delve.depth=minDepth;
+  // Если сетки нет — просто обновляем depth, dvInitGrid подхватит при открытии
+  if(!G.delve.grid)return;
+  const targetRow=Math.ceil(minDepth/5);
+  const g=G.delve.grid;
+  if(g.playerRow>=targetRow)return;
+  // Ставим игрока на ближайший существующий узел центральной колонки на targetRow
+  // Ищем узел на targetRow или ближайшей строке ниже
+  let placed=false;
+  for(let dr=0;dr<=3&&!placed;dr++){
+    for(let dc=0;dc<=4&&!placed;dc++){
+      const candidates=[9,9+dc,9-dc];
+      for(const col of candidates){
+        const k=col+'_'+(targetRow+dr);
+        if(g.nodes[k]){
+          g.playerCol=g.nodes[k].col;
+          g.playerRow=g.nodes[k].row;
+          g.nodes[k].visited=true;
+          placed=true;break;
+        }
+      }
+    }
+  }
+  if(!placed){
+    // Fallback — просто ставим координаты, dvEnsureGenerated догенерирует
+    g.playerRow=targetRow;
+    g.playerCol=9;
+  }
+  g.selectedKey=null;
+  // Генерируем сетку до нужной глубины
+  dvEnsureGenerated();
+  // Камера едет плавно через RAF, не прыгает
+  _dv.camTarget=g.playerRow;
+  _dv.camColTarget=g.playerCol;
+  if(!_dv._raf)_dv._raf=requestAnimationFrame(_dvAnimFrame);
+}
+
 const calcCh=(power,tier,dgrOverride)=>{
   const t=Math.max(1,Math.min(16,tier||1));
   const d=dgrOverride||MAP_TIERS[t-1].dgr;
@@ -410,7 +452,7 @@ function completeSelfRun(){
   G.selfRun=null;resetRunUI();_mc_stop();G.selMapVariant=null;checkContractRun(tier,ok?'ok':'fail');
   if(ok){
     const lm=cursed?3:uniq?2:1;
-    if(!isGrd&&!isBoss){G.cleared[tier]=true;if(tier>G.maxTier)G.maxTier=tier;}
+    if(!isGrd&&!isBoss){G.cleared[tier]=true;if(tier>G.maxTier)G.maxTier=tier;dvUpdateMinDepth(tier);}
     if(isBoss&&bossMapData){
       G.bossKills[bossId]=(G.bossKills[bossId]||0)+1;
       G.bossTriesLeft=0;G.activeBossId=null;if(bossId==='exarch'||bossId==='eater')G.pendingBoss=null;
@@ -567,7 +609,7 @@ function completeAct(){
   const act=G.actRun.act;const g=ri(act.g[0],act.g[1]);G.gold+=g;G.stats.ge+=g;G.stats.ar++;G.actRun=null;
   // Acts give small self XP
   const xpGain=act.xp||Math.floor(xpAmt(1)*1.5);addXPSelf(xpGain);
-  log('🏕 '+act.nm+' завершён — +'+g+gi(16)+' +'+xpGain+'XP','ge');floatT('+'+g+gi(16),'#c8a96e');sfxGold();
+  log('🏕 '+act.nm+' завершён — +'+g+gi(16)+' +'+xpGain+'XP','ge');floatT('+'+g+gi(16),'#c8a96e');
   const btn=document.getElementById('abtn-'+act.id);if(btn)btn.disabled=false;
   const fill=document.getElementById('apf-'+act.id);if(fill)fill.style.width='0%';
   updateRes();
@@ -613,7 +655,7 @@ function resolveWorker(w,md){
   const cost=SHOP_COSTS[md.t]||0;
   const lm=w.cursed?3:w.uniq?2:1;
   const g=goldReward(md,power,cost);G.gold+=g;G.stats.ge+=g;
-  if(!w.isGrd){G.cleared[md.t]=true;if(md.t>G.maxTier)G.maxTier=md.t;if(md.t===16&&!w.cursed&&!w.uniq)checkT16BossUnlock();}
+  if(!w.isGrd){G.cleared[md.t]=true;if(md.t>G.maxTier)G.maxTier=md.t;dvUpdateMinDepth(md.t);if(md.t===16&&!w.cursed&&!w.uniq)checkT16BossUnlock();}
   // Сульфит для шахты
   if(G.delve&&ok){const _wsul=sulphiteFromTier(md.t,true);const _wcap=G.delve.sulphiteCap;G.delve.sulphite=Math.min(_wcap,G.delve.sulphite+_wsul);}
   if(w.isGrd){
@@ -685,7 +727,7 @@ function resolveExpStep(w){
   }
   const ecost=SHOP_COSTS[tier]||0;
   const _expGb=1.2*(1+passiveVal('expGoldPct')/100);const g=Math.floor(goldReward(md,power,ecost)*_expGb);G.gold+=g;G.stats.ge+=g;
-  G.cleared[tier]=true;if(tier>G.maxTier)G.maxTier=tier;
+  G.cleared[tier]=true;if(tier>G.maxTier)G.maxTier=tier;dvUpdateMinDepth(tier);
   if(tier===16)checkT16BossUnlock();
   // Сульфит с экспедиции — как с обычного работника
   if(G.delve){const _esul=sulphiteFromTier(tier,true);G.delve.sulphite=Math.min(G.delve.sulphiteCap,G.delve.sulphite+_esul);}

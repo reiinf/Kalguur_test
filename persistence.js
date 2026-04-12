@@ -134,8 +134,8 @@ if(s.v&&s.v>=9){/* compatible enough */}
     if(!G._fishCaught)G._fishCaught=0;
     if(!G.delve)G.delve={depth:0,sulphite:0,sulphiteCap:5000,azurite:0,upgrades:{armor:0,blast:0,speed:0,storage:0,pump:0,lantern:0},running:false,runDepth:0,locationType:null,grid:null};
     if(!G.delve.upgrades)G.delve.upgrades={armor:0,blast:0,speed:0,storage:0,pump:0,lantern:0};
-    // Сбрасываем сетку при смене версии генерации
-    if(!G.delve.grid||G.delve.grid._genVer!=='378a'){G.delve.grid=null;dvInitGrid();}
+    // Грузим сохранённую сетку; если её нет — создаём
+    if(!G.delve.grid){dvInitGrid();}
     if(G.delve.grid&&G.delve.grid.selectedKey===undefined)G.delve.grid.selectedKey=null;
     if(G.delve.viewMode===undefined||G.delve.viewMode==='full'||G.delve.viewMode==='compact')G.delve.viewMode='map';
     if(G.delve.running&&(!G.delve._runEnd||G.gt>=G.delve._runEnd)){G.delve.running=false;}

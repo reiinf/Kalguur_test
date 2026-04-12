@@ -271,26 +271,38 @@ function dvGenChunk(grid,fromRow,toRow){
   }
 
   // ── Шаг 5: случайные узлы в пустотах ──────────────────────────────────
-  // Запрещённые клетки — пути L-тоннелей магистралей (промежуточные клетки)
+  // Запрещённые клетки — пути тоннелей (магистральные L и горизонтали перемычек)
   const _tunnelCells=new Set();
+  // Магистральные L-пути
   for(let i=0;i<MAINS.length;i++){
     for(let row=fromRow;row<=toRow;row++){
       if(row===fromRow)continue;
       const col=mainPaths[i][row];
       const prevCol=mainPaths[i][row-1];
-      if(col===prevCol)continue; // вертикальный — нет горизонтального пути
-      // L-тоннель: горизонталь на уровне prevRow от prevCol до col
+      if(col===prevCol)continue;
       const minC=Math.min(col,prevCol), maxC=Math.max(col,prevCol);
       for(let c=minC+1;c<maxC;c++) _tunnelCells.add(dvKey(c,row-1));
     }
+  }
+  // Горизонтальные пути перемычек — чтобы rand не генерился на линии тоннеля
+  for(const br of bridges){
+    const i=br.pair;
+    const colA=mainPaths[i][br.rowA];
+    const colB=mainPaths[i+1][br.rowB];
+    const midCol=Math.round((colA+colB)/2);
+    // kA→kMid горизонталь на rowA
+    const minC1=Math.min(colA,midCol), maxC1=Math.max(colA,midCol);
+    for(let c=minC1+1;c<maxC1;c++) _tunnelCells.add(dvKey(c,br.rowA));
+    // kMid→kB горизонталь на rowB (L-рендер Mid→B рисует горизонталь на rowMid)
+    const minC2=Math.min(midCol,colB), maxC2=Math.max(midCol,colB);
+    for(let c=minC2+1;c<maxC2;c++) _tunnelCells.add(dvKey(c,br.rowMid));
   }
   for(let row=fromRow;row<=toRow;row++){
     for(let col=0;col<DV_COLS;col++){
       const k=dvKey(col,row);
       if(grid.nodes[k])continue;
-      if(_tunnelCells.has(k))continue; // на пути тоннеля — пропускаем
+      if(_tunnelCells.has(k))continue;
       if(Math.random()>0.08)continue;
-      // Собираем соседей в радиусе 1 строки и 3 колонки — разделяем по стороне
       const above=[],below=[],left=[],right=[];
       for(let dr=-1;dr<=1;dr++){
         for(let dc=-3;dc<=3;dc++){
@@ -303,20 +315,24 @@ function dvGenChunk(grid,fromRow,toRow){
           else right.push(ck);
         }
       }
-      // Нужны соседи минимум с 2 разных сторон (не два с одной)
       const sidesWithNeighbors=[above,below,left,right].filter(s=>s.length>0);
       if(sidesWithNeighbors.length<2)continue;
       const nd=dvGenNode(col,row);
       grid.nodes[k]={col,row,type:nd.type,biome:nd.biome,visited:false,jx:nd.jx,jy:nd.jy,_rand:true};
-      // Подключаем к ближайшему по каждой стороне чтобы не было тупика
       const byDist=(arr)=>arr.sort((a,b)=>{
         const na=grid.nodes[a],nb=grid.nodes[b];
         return (Math.abs(na.col-col)+Math.abs(na.row-row))-(Math.abs(nb.col-col)+Math.abs(nb.row-row));
       });
-      const sides=sidesWithNeighbors.map(s=>byDist(s)[0]);
-      // Берём минимум 1, максимум 2 разных стороны
+      // Горизонтальные соседи (та же строка) — всегда подключаем
+      // Если rand визуально между двумя узлами — ребро обязано быть
       const picked=new Set();
-      for(const sk of sides){if(picked.size>=2)break;picked.add(sk);}
+      if(left.length>0) picked.add(byDist(left)[0]);
+      if(right.length>0) picked.add(byDist(right)[0]);
+      // Вертикальный — если горизонтальных меньше двух
+      if(picked.size<2){
+        const vert=[...above,...below];
+        if(vert.length>0) picked.add(byDist(vert)[0]);
+      }
       for(const sk of picked)dvAddEdge(grid,k,sk);
     }
   }
@@ -372,7 +388,7 @@ function dvInitGrid(){
     cameraRow:0,cameraCol:9,
     minRowVisible:0,
     generatedRows:1,selectedKey:null,
-    _genVer:'378g'
+    _genVer:'378h'
   };
   dv.grid.nodes[dvKey(9,0)]={col:9,row:0,type:'standard',biome:'stone',visited:true,jx:0,jy:0};
   dvGenChunk(dv.grid,1,DV_ROWS_AHEAD);
@@ -398,7 +414,8 @@ function dvGetNeighbors(nodeId){
 }
 
 function dvLanternRadius(){
-  return 999; // туман отключён
+  const lvl=G.delve.upgrades.lantern||0;
+  return 1.4 + lvl * 0.18; // 0lvl=1.4, 20lvl=5.0 клеток
 }
 
 function dvNodeDist(nodeId){
@@ -506,23 +523,33 @@ function _dvTunnelLPath(ctx,x1,y1,x2,y2){
 }
 
 function _dvDrawWall(ctx,x1,y1,x2,y2,na,nb){
-  ctx.strokeStyle='#222018';
-  ctx.lineWidth=14;
-  ctx.lineCap='square';
-  ctx.lineJoin='miter';
-  ctx.miterLimit=10;
+  ctx.strokeStyle='#2a2318';
+  ctx.lineWidth=16;
+  ctx.lineCap='round';
+  ctx.lineJoin='round';
   _dvTunnelLPath(ctx,x1,y1,x2,y2);
   ctx.stroke();
 }
 
 function _dvDrawLine(ctx,x1,y1,x2,y2,highlighted,na,nb){
-  ctx.strokeStyle=highlighted?'#ffdd44':'#c8a040';
-  ctx.lineWidth=highlighted?3.5:2;
-  ctx.lineCap='square';
-  ctx.lineJoin='miter';
-  ctx.miterLimit=10;
-  _dvTunnelLPath(ctx,x1,y1,x2,y2);
-  ctx.stroke();
+  if(highlighted){
+    // Пунктир к выбранному узлу пока стоим
+    ctx.strokeStyle='#b88820';
+    ctx.lineWidth=2;
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
+    ctx.setLineDash([6,7]);
+    _dvTunnelLPath(ctx,x1,y1,x2,y2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  } else {
+    ctx.strokeStyle='#c8a040';
+    ctx.lineWidth=2;
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
+    _dvTunnelLPath(ctx,x1,y1,x2,y2);
+    ctx.stroke();
+  }
 }
 
 function dvDrawNodePOE(ctx,x,y,node,state,cell){
@@ -605,12 +632,29 @@ function dvRender(){
   if(c.width!==W||c.height!==H){c.width=W;c.height=H;}
   const ctx=c.getContext('2d');
   ctx.clearRect(0,0,W,H);
-  ctx.fillStyle='#080604';
+
+  // Фон: почти чёрный + SVG-шум
+  ctx.fillStyle='#050403';
   ctx.fillRect(0,0,W,H);
+  if(!dvRender._noisePat){
+    const offW=300,offH=300;
+    const off=document.createElement('canvas');off.width=offW;off.height=offH;
+    const octx=off.getContext('2d');
+    // Рисуем шум через SVG feTurbulence
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${offW}" height="${offH}"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter><rect width="${offW}" height="${offH}" filter="url(#n)" opacity="0.05"/></svg>`;
+    const img=new Image();
+    img.src='data:image/svg+xml,'+encodeURIComponent(svg);
+    img.onload=()=>{octx.drawImage(img,0,0);dvRender._noisePat=ctx.createPattern(off,'repeat');dvRender();};
+  } else {
+    ctx.fillStyle=dvRender._noisePat;
+    ctx.fillRect(0,0,W,H);
+  }
 
   const lantern=dvLanternRadius();
   const cell=dvCellSize();
   const playerKey=dvKey(g.playerCol,g.playerRow);
+  const ppx=_dv.animating?_dv.curX:dvNodeXY(playerKey).x;
+  const ppy=_dv.animating?_dv.curY:dvNodeXY(playerKey).y;
 
   // Состояния узлов
   const nodeStates={};
@@ -645,42 +689,149 @@ function dvRender(){
     const aVis=na.visited||nodeStates[ak];
     const bVis=nb.visited||nodeStates[bk];
     if(!aVis&&!bVis)continue;
+    const aVisited=na.visited;
+    const bVisited=nb.visited;
+    const aIsPlayer=(ak===playerKey);
+    const bIsPlayer=(bk===playerKey);
+    // Во время анимации ребро игрок→цель не красим золотом
+    const isAnimEdge=_dv.animating&&g.selectedKey&&(
+      (aIsPlayer&&bk===g.selectedKey)||(bIsPlayer&&ak===g.selectedKey)
+    );
+    const goldLine=!isAnimEdge&&(
+      (aVisited&&bVisited)||((aVisited&&bIsPlayer)||(bVisited&&aIsPlayer))
+    );
     const highlighted=!!(g.selectedKey&&(
       (ak===playerKey&&bk===g.selectedKey)||
       (bk===playerKey&&ak===g.selectedKey)
     ));
-    visEdges.push({pa,pb,ak,bk,highlighted,na,nb});
+    visEdges.push({pa,pb,ak,bk,goldLine,na,nb});
   }
 
-  // Проход 1: серые стены
+  // Проход 1: серые стены (все рёбра)
   for(const{pa,pb,na,nb} of visEdges){
     _dvDrawWall(ctx,pa.x,pa.y,pb.x,pb.y,na,nb);
   }
-  // Проход 2: жёлтые линии (не highlighted)
-  for(const{pa,pb,highlighted,na,nb} of visEdges){
-    if(highlighted)continue;
+  // Во время анимации — серая стена тянется по L-пути до текущей позиции ГГ
+  if(_dv.animating&&_dv.points&&_dv.points.length>1){
+    ctx.strokeStyle='#2a2318';
+    ctx.lineWidth=16;
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
+    ctx.beginPath();
+    ctx.moveTo(_dv.points[0].x,_dv.points[0].y);
+    for(let i=1;i<_dv.points.length;i++){
+      if(i<=_dv.ptIdx){ctx.lineTo(_dv.points[i].x,_dv.points[i].y);}
+      else if(i===_dv.ptIdx+1){ctx.lineTo(ppx,ppy);break;}
+      else break;
+    }
+    ctx.stroke();
+  }
+  // Проход 2: золотые линии только на пройденном пути
+  for(const{pa,pb,goldLine,na,nb} of visEdges){
+    if(!goldLine)continue;
     _dvDrawLine(ctx,pa.x,pa.y,pb.x,pb.y,false,na,nb);
   }
-  // Проход 3: highlighted поверх
-  for(const{pa,pb,highlighted,na,nb} of visEdges){
-    if(!highlighted)continue;
-    _dvDrawLine(ctx,pa.x,pa.y,pb.x,pb.y,true,na,nb);
-  }
+  // Проход 3: пунктир и анимационная линия рисуются после объявления ppx/ppy
 
-  // Узлы
+  // Узлы (все кроме question — они рисуются после тумана)
   for(const key of Object.keys(nodeStates)){
+    if(nodeStates[key]==='question')continue;
     const n=g.nodes[key];
     const{x,y}=dvNodeXY(key);
     dvDrawNodePOE(ctx,x,y,n,nodeStates[key],cell);
   }
 
-  // Персонаж
-  const ppx=_dv.animating?_dv.curX:dvNodeXY(playerKey).x;
-  const ppy=_dv.animating?_dv.curY:dvNodeXY(playerKey).y;
+  // Пунктир отключён (палит bridge/rand костыли)
+  // if(!_dv.animating&&g.selectedKey&&g.nodes[g.selectedKey]&&dvIsReachable(g.selectedKey)){
+  //   ...
+  // }
+
+  // Во время анимации — золотая линия по L-пути до текущей позиции ГГ
+  if(_dv.animating&&_dv.points&&_dv.points.length>1){
+    ctx.strokeStyle='#c8a040';
+    ctx.lineWidth=2;
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(_dv.points[0].x,_dv.points[0].y);
+    for(let i=1;i<_dv.points.length;i++){
+      if(i<=_dv.ptIdx){ctx.lineTo(_dv.points[i].x,_dv.points[i].y);}
+      else if(i===_dv.ptIdx+1){ctx.lineTo(ppx,ppy);break;}
+      else break;
+    }
+    ctx.stroke();
+  }
+
   const pNode=g.nodes[playerKey]||{col:g.playerCol,row:g.playerRow,type:'standard',biome:'stone'};
+
+  // Виньетка
+  const vig=ctx.createRadialGradient(W/2,H/2,H*0.3,W/2,H/2,H*0.85);
+  vig.addColorStop(0,'rgba(0,0,0,0)');
+  vig.addColorStop(1,'rgba(0,0,0,0.72)');
+  ctx.fillStyle=vig;
+  ctx.fillRect(0,0,W,H);
+
+  // Туман войны
+  const lvl=G.delve.upgrades.lantern||0;
+  const fogInner=60+lvl*12;
+  const fogOuter=110+lvl*18;
+  const fog=ctx.createRadialGradient(ppx,ppy,fogInner,ppx,ppy,fogOuter);
+  fog.addColorStop(0,'rgba(0,0,0,0)');
+  fog.addColorStop(1,'rgba(0,0,0,0.96)');
+  ctx.fillStyle=fog;
+  ctx.fillRect(0,0,W,H);
+
+  // Question-узлы поверх тумана — приглушённо
+  ctx.globalAlpha=0.55;
+  for(const key of Object.keys(nodeStates)){
+    if(nodeStates[key]!=='question')continue;
+    const n=g.nodes[key];
+    const{x,y}=dvNodeXY(key);
+    dvDrawNodePOE(ctx,x,y,n,'question',cell);
+  }
+  ctx.globalAlpha=1;
+
+  // Посещённые пути поверх тумана — фонарики на стенках
+  for(const{pa,pb,goldLine,na,nb} of visEdges){
+    const bothVisited=na.visited&&nb.visited;
+    const oneVisitedOnePlayer=(na.visited&&nb===g.nodes[playerKey])||(nb.visited&&na===g.nodes[playerKey]);
+    if(!bothVisited&&!oneVisitedOnePlayer)continue;
+    // Стена — заметно темнее активных тоннелей
+    ctx.globalAlpha=0.45;
+    _dvDrawWall(ctx,pa.x,pa.y,pb.x,pb.y,na,nb);
+    // Золотая линия — приглушённый тёплый цвет, как старый факел
+    if(goldLine){
+      ctx.globalAlpha=0.7;
+      ctx.strokeStyle='#6a4e14';
+      ctx.lineWidth=2;
+      ctx.lineCap='round';
+      ctx.lineJoin='round';
+      ctx.shadowColor='#a06808';
+      ctx.shadowBlur=3;
+      _dvTunnelLPath(ctx,pa.x,pa.y,pb.x,pb.y);
+      ctx.stroke();
+      ctx.shadowBlur=0;
+    }
+  }
+  ctx.globalAlpha=0.55;
+  for(const key of Object.keys(nodeStates)){
+    if(nodeStates[key]!=='visited')continue;
+    const n=g.nodes[key];
+    const{x,y}=dvNodeXY(key);
+    dvDrawNodePOE(ctx,x,y,n,'visited',cell);
+  }
+  ctx.globalAlpha=1;
+
+  // ГГ — самый верхний слой, поверх visited
+  const glowGrad=ctx.createRadialGradient(ppx,ppy,0,ppx,ppy,52);
+  glowGrad.addColorStop(0,'rgba(255,140,0,0.18)');
+  glowGrad.addColorStop(1,'rgba(255,140,0,0)');
+  ctx.fillStyle=glowGrad;
+  ctx.beginPath();ctx.arc(ppx,ppy,52,0,Math.PI*2);ctx.fill();
   dvDrawNodePOE(ctx,ppx,ppy,pNode,'player',cell);
 
-  // Метка глубины
+  // Метка глубины — поверх всего
   ctx.fillStyle='rgba(0,0,0,0.5)';
   ctx.fillRect(0,0,W,22);
   ctx.fillStyle='#8870cc';
@@ -779,8 +930,29 @@ function dvUpdateInfoBar(){
   }
 }
 
+// Проверка достижимости узла от текущей позиции игрока
+function dvIsReachable(targetKey){
+  const g=G.delve.grid;
+  const playerKey=dvKey(g.playerCol,g.playerRow);
+  const playerNode=g.nodes[playerKey];
+  const targetNode=g.nodes[targetKey];
+  if(!targetNode)return false;
+  const neighbors=dvGetNeighbors(playerKey);
+  const neighborKeys=new Set(neighbors.map(n=>dvKey(n.col,n.row)));
+  const isNeighbor=neighborKeys.has(targetKey);
+  if(isNeighbor)return true;
+  const targetNeighborKeys=new Set(dvGetNeighbors(targetKey).map(n=>dvKey(n.col,n.row)));
+  const hasCommonNeighbor=[...neighborKeys].some(k=>targetNeighborKeys.has(k));
+  const targetIsBridge=!!(targetNode._bridge)&&hasCommonNeighbor;
+  const playerIsBridge=!!(playerNode&&playerNode._bridge)&&hasCommonNeighbor;
+  const targetIsRand=!!(targetNode._rand)&&hasCommonNeighbor;
+  const playerIsRand=!!(playerNode&&playerNode._rand)&&hasCommonNeighbor;
+  return targetIsBridge||playerIsBridge||targetIsRand||playerIsRand;
+}
+
 function dvGo(){
   if(_dv.animating)return;
+  if(_dv.camTarget!==null||_dv.camColTarget!==null)return; // камера ещё едет после телепорта
   const dv=G.delve;
   const g=dv.grid;
   if(!g.selectedKey){showN('Выберите узел на карте!');return;}
@@ -821,11 +993,16 @@ function dvGo(){
   log('⛏️ Спуск ['+(inDarkFinal?'⚠ тьма':'')+(DELVE_LOCATIONS.find(l=>l.id===target.type)||{nm:''}).nm+'] гл.'+(target.row*5),'info');
 
   const wasVisited=target.visited;
+  const fromKey=dvKey(g.playerCol,g.playerRow);
+  const fromCol=g.playerCol,fromRow=g.playerRow;
+  const toKey=g.selectedKey;
 
   dvStartAnim(target.col,target.row,()=>{
     g.playerCol=target.col;
     g.playerRow=target.row;
-    target.visited=true;
+    // visited помечается только при успехе внутри resolveDelveRunGrid
+    // При bridge/rand прыжке прямого ребра нет — добавляем его чтобы goldLine работала
+    if(isBridgeJump) dvAddEdge(g,fromKey,toKey);
     g.selectedKey=null;
     dv.depth=target.row*5;
     dv.running=false;
@@ -845,13 +1022,25 @@ function dvGo(){
     dvPruneOldRows();
     dvEnsureGenerated();
 
-    if(!wasVisited)resolveDelveRunGrid(target,inDarkFinal);
+    if(!wasVisited)resolveDelveRunGrid(target,inDarkFinal,fromCol,fromRow);
     dvUpdateInfoBar();
     dvRender();
     save();
   });
 
   dvUpdateInfoBar();
+}
+
+function dvDeathEffect(){
+  const wrap=document.getElementById('delve-canvas-wrap');
+  if(!wrap)return;
+  wrap.style.transition='transform 0.05s';
+  const steps=['-7px','6px','-5px','4px','-3px','2px','0px'];
+  let i=0;
+  const shake=()=>{if(i>=steps.length){wrap.style.transform='';return;}
+    wrap.style.transform='translateX('+steps[i++]+')';
+    setTimeout(shake,55);};
+  shake();
 }
 
 function dvFlashResult(lines){
@@ -863,7 +1052,7 @@ function dvFlashResult(lines){
   el._fadeTimer=setTimeout(()=>{el.style.opacity='0';},3000);
 }
 
-function resolveDelveRunGrid(node,inDark){
+function resolveDelveRunGrid(node,inDark,fromCol,fromRow){
   const dv=G.delve;
   const depth=dv.depth;
   const loc=DELVE_LOCATIONS.find(l=>l.id===node.type)||DELVE_LOCATIONS[0];
@@ -877,11 +1066,15 @@ function resolveDelveRunGrid(node,inDark){
 
   if(Math.random()>ch){
     log('💀 Погибли в шахте на глубине '+depth+'!','ev');
-    showN('💀 Погибли в шахте!','red');
     floatT('💀 шахта','#ff4444');
+    dvFlashResult(['<span style="color:#ff4444">💀 Погибли на глубине '+depth+'</span>']);
+    if(fromCol!==undefined){const g=G.delve.grid;g.playerCol=fromCol;g.playerRow=fromRow;dv.depth=fromRow*5;_dv.camTarget=fromRow;_dv.camColTarget=fromCol;if(!_dv._raf)_dv._raf=requestAnimationFrame(_dvAnimFrame);}
+    dvDeathEffect();
+    dvRender();
     return;
   }
 
+  node.visited=true;
   const msgs=[];let gotSomething=false;
 
   if(Math.random()<0.35*(m.item||1)){
@@ -932,13 +1125,6 @@ function renderDelve(){
   if(!dv.viewMode)dv.viewMode='map';
   const vm=dv.viewMode;
 
-  const introHtml='<div style="background:rgba(0,20,40,.4);border:1px solid #224466;border-radius:6px;padding:10px 12px;margin-bottom:10px;font-size:12px;line-height:1.8;color:var(--txt-d)">'+
-    'Под картами Атласа скрываются бесконечные подземные тоннели.<br>'+
-    'Вы берёте вагонетку и спускаетесь в темноту — глубже, чем ходят обычные работники.<br>'+
-    '<span style="color:#88ccff">Сульфит</span> — топливо, копится с карт. Чем глубже — тем дороже.&nbsp;'+
-    '<span style="color:#88aaff">Азурит</span> — самоцветы для улучшений.<br>'+
-    'Чем глубже — тем опаснее, но лучше <span style="color:var(--gold)">снаряжение</span> и больше <span style="color:var(--gold)">золота</span>.'+
-  '</div>';
   const isBig=(vm==='big');
   const modeBar=
     '<div style="display:flex;gap:4px;margin-bottom:6px;align-items:center">'+
@@ -946,7 +1132,6 @@ function renderDelve(){
       '<button class="tab-btn'+((vm==='map'||vm==='big')?' active':'')+'" onclick="dvSetViewMode(\'map\')" style="font-size:11px;padding:5px 10px">⛏️ Шахта</button>'+
       '<button class="btn btn-sm btn-p" onclick="openDelveUpgrades()" style="font-size:11px;padding:5px 10px">🔧 Улучшения</button>'+
       '<button class="btn btn-sm" onclick="dvEvacuate()" style="font-size:11px;padding:5px 10px;margin-left:auto">Эвакуация (200'+gi(16)+')</button>'+
-      '<button class="btn btn-sm" onclick="dvRegenGrid()" style="font-size:11px;padding:5px 10px;background:#2a1a00;border-color:#554400">🔄 Пересоздать</button>'+
       '<button class="tab-btn" onclick="dvToggleFullscreen()" style="font-size:11px;padding:5px 10px">'+(isBig?'⊟ Меньше экран':'⊞ Больше экран')+'</button>'+
     '</div>';
 
@@ -958,9 +1143,12 @@ function renderDelve(){
     const canvasHtmlLocal=
       '<div id="delve-canvas-wrap" style="flex:1;position:relative;background:#070504;border:1px solid #334;border-radius:4px;min-height:'+canvasMinH+';overflow:hidden">'+
         '<canvas id="delve-canvas" style="display:block;width:100%;height:100%"></canvas>'+
-        '<div style="position:absolute;bottom:0;left:0;right:0;padding:6px;display:flex;justify-content:center;align-items:center;gap:10px;background:linear-gradient(transparent,rgba(0,0,0,0.7))">'+
-          '<div id="delve-go-info" style="font-size:15px"></div>'+
-          '<button id="delve-go-btn" class="btn btn-p" onclick="dvGo()" disabled style="opacity:.4;font-size:15px;padding:4px 20px">⛏️ ВПЕРЁД</button>'+
+        '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.7))">'+
+          '<div id="delve-result-flash" style="text-align:center;font-size:13px;padding:4px 10px 2px;min-height:20px;opacity:0;transition:opacity 0.3s;background:rgba(0,0,0,0.45);border-radius:4px 4px 0 0"></div>'+
+          '<div style="padding:6px;display:flex;justify-content:center;align-items:center;gap:10px">'+
+            '<div id="delve-go-info" style="font-size:15px"></div>'+
+            '<button id="delve-go-btn" class="btn btn-p" onclick="dvGo()" disabled style="opacity:.4;font-size:15px;padding:4px 20px">⛏️ ВПЕРЁД</button>'+
+          '</div>'+
         '</div>'+
       '</div>';
     body='<div style="display:flex;flex-direction:column">'+infoBarHtml+canvasHtmlLocal+'</div>';
@@ -1051,12 +1239,20 @@ function dvEvacuate(){
 }
 
 function dvOpenInfo(){
-  const html='<div style="background:rgba(0,20,40,.4);border:1px solid #224466;border-radius:6px;padding:14px 16px;font-size:13px;line-height:2;color:var(--txt-d)">'+
-    'Под картами Атласа скрываются бесконечные подземные тоннели.<br>'+
-    'Вы берёте вагонетку и спускаетесь в темноту — глубже, чем ходят обычные работники.<br>'+
-    '<span style="color:#88ccff">Сульфит</span> — топливо, копится с карт. Чем глубже — тем дороже.&nbsp;'+
-    '<span style="color:#88aaff">Азурит</span> — самоцветы для улучшений.<br>'+
-    'Чем глубже — тем опаснее, но лучше <span style="color:var(--gold)">снаряжение</span> и больше <span style="color:var(--gold)">золота</span>.'+
+  const sep='<div style="border-top:1px solid #1a2a3a;margin:8px 0"></div>';
+  const html='<div style="background:rgba(0,20,40,.4);border:1px solid #224466;border-radius:6px;padding:14px 16px;font-size:13px;line-height:1.7;color:var(--txt-d)">'+
+    '<div>Под картами Атласа скрываются бесконечные подземные тоннели.<br>Вы берёте вагонетку и спускаетесь в темноту — глубже, чем ходят обычные работники.</div>'+
+    sep+
+    '<div><span style="color:#88ccff">Сульфит</span> — топливо для спуска. Копится с карт, а чем глубже спуск — тем его больше расходуется.</div>'+
+    '<div style="margin-top:4px"><span style="color:#88aaff">Азурит</span> — самоцветы для улучшений вагонетки.</div>'+
+    sep+
+    '<div>Чем глубже — тем опаснее, но лучше <span style="color:var(--gold)">снаряжение</span> и больше <span style="color:var(--gold)">золота</span>.</div>'+
+    sep+
+    '<div>Иногда в тоннелях встречается рыхлая порода — её можно прокопать и проложить новый путь.</div>'+
+    sep+
+    '<div style="color:#886688">Боссы шахты пока не реализованы.</div>'+
+    sep+
+    '<div style="display:flex;align-items:center;gap:10px"><button class="btn btn-sm" onclick="closeM();dvRegenGrid()" style="background:#2a1a00;border-color:#554400">🔄 Пересоздать шахту</button><span style="color:#666;font-size:12px">для совсем безвыходных ситуаций</span></div>'+
   '</div>';
   openM('📋 Сведения',html);
 }
@@ -1118,5 +1314,6 @@ function buyDelveUpgrade(id){
   log('🔧 '+upg.nm+' улучшена до ур.'+(lvl+1),'info');
   showN(upg.nm+' ур.'+(lvl+1),'ge');
   save();
+  dvRender();
   openDelveUpgrades();
 }
