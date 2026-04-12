@@ -1143,6 +1143,7 @@ function confirmPrestige(factionId){
   G._prestigeUnlockAll=true;
   // Apply faction start bonuses
   applyFactionStart();
+  dvInitGrid(); // сброс шахты при возвышении
   G.contracts=[];G.contractRunsDone=0;if(hasSyndFeature())refreshContracts();
   closeM();
   log('✨ ВОЗВЫШЕНИЕ '+np+'! Фракция: '+FACTIONS[G.faction].nm,'info');

@@ -1118,7 +1118,7 @@ function renderDelve(){
   const el=document.getElementById('delve-area');if(!el)return;
   const dv=G.delve;
 
-  if(!dv.grid||Object.keys(dv.grid.nodes).length===0)dvInitGrid();
+  if(!dv.grid||Object.keys(dv.grid.nodes).length===0||dv.grid._genVer!=='378h')dvInitGrid();
   dvEnsureGenerated();
 
   // Режим: 'info'=сведения, 'map'=шахта стандарт, 'big'=большой без шапки
