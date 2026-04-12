@@ -1,13 +1,8 @@
 // constants.js — константы и данные
 // Зависимости: state.js (G), icons.js (gi)
 
-const VERSION="0.405";
-document.title="Картоходец v"+VERSION;
-document.querySelector(".ver").textContent="v"+VERSION;
-  document.getElementById("page-title").textContent="Картоходец v"+VERSION;
-// Secret debug: click version 5 times
-(function(){let _vc=0,_vt;const _vs=document.getElementById('ver-span')||document.querySelector('.ver');
-if(_vs)_vs.addEventListener('click',function(){_vc++;clearTimeout(_vt);_vt=setTimeout(()=>{_vc=0;},1500);if(_vc>=5){_vc=0;openDebug();}});})();
+
+
 'use strict';
 // ══════════ CONSTANTS ══════════════════════════════════════════
 const MAP_TIERS=[

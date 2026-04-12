@@ -19,6 +19,18 @@
   gtag('config', 'G-WMX6M2GGE9');
 </script>
 
+<script>
+  const VERSION = "0.405";
+  document.title = "Картоходец v" + VERSION;
+  document.addEventListener("DOMContentLoaded", function() {
+    var verEl = document.querySelector(".ver");
+    if (verEl) verEl.textContent = "v" + VERSION;
+    document.getElementById("page-title").textContent = "Картоходец v" + VERSION;
+    // Secret debug: click version 5 times
+    (function(){let _vc=0,_vt;if(verEl)verEl.addEventListener('click',function(){_vc++;clearTimeout(_vt);_vt=setTimeout(()=>{_vc=0;},1500);if(_vc>=5){_vc=0;openDebug();}});})();
+  });
+</script>
+
 </head>
 <body>
 <div id="app">
