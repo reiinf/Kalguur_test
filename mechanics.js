@@ -195,10 +195,9 @@ function dvUpdateMinDepth(tier){
   g.selectedKey=null;
   // Генерируем сетку до нужной глубины
   dvEnsureGenerated();
-  // Камера едет плавно через RAF, не прыгает
-  _dv.camTarget=g.playerRow;
-  _dv.camColTarget=g.playerCol;
-  if(!_dv._raf)_dv._raf=requestAnimationFrame(_dvAnimFrame);
+  // Камера подтянется при следующем рендере
+  g.cameraRow=g.playerRow;
+  g.cameraCol=g.playerCol;
 }
 
 const calcCh=(power,tier,dgrOverride)=>{
@@ -1143,7 +1142,8 @@ function confirmPrestige(factionId){
   G._prestigeUnlockAll=true;
   // Apply faction start bonuses
   applyFactionStart();
-  dvInitGrid(); // сброс шахты при возвышении
+  // Инициализируем шахту с нуля (престиж = полный сброс)
+  dvInitGrid();
   G.contracts=[];G.contractRunsDone=0;if(hasSyndFeature())refreshContracts();
   closeM();
   log('✨ ВОЗВЫШЕНИЕ '+np+'! Фракция: '+FACTIONS[G.faction].nm,'info');

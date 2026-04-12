@@ -1004,7 +1004,7 @@ function dvGo(){
     // При bridge/rand прыжке прямого ребра нет — добавляем его чтобы goldLine работала
     if(isBridgeJump) dvAddEdge(g,fromKey,toKey);
     g.selectedKey=null;
-    dv.depth=target.row*5;
+    dv.depth=Math.max(dv.depth,target.row*5);
     dv.running=false;
 
     // Плавная камера — вертикальная и горизонтальная
@@ -1068,7 +1068,7 @@ function resolveDelveRunGrid(node,inDark,fromCol,fromRow){
     log('💀 Погибли в шахте на глубине '+depth+'!','ev');
     floatT('💀 шахта','#ff4444');
     dvFlashResult(['<span style="color:#ff4444">💀 Погибли на глубине '+depth+'</span>']);
-    if(fromCol!==undefined){const g=G.delve.grid;g.playerCol=fromCol;g.playerRow=fromRow;dv.depth=fromRow*5;_dv.camTarget=fromRow;_dv.camColTarget=fromCol;if(!_dv._raf)_dv._raf=requestAnimationFrame(_dvAnimFrame);}
+    if(fromCol!==undefined){const g=G.delve.grid;g.playerCol=fromCol;g.playerRow=fromRow;dv.depth=Math.max(0,(fromRow-1)*5);_dv.camTarget=fromRow;_dv.camColTarget=fromCol;if(!_dv._raf)_dv._raf=requestAnimationFrame(_dvAnimFrame);}
     dvDeathEffect();
     dvRender();
     return;
@@ -1118,7 +1118,7 @@ function renderDelve(){
   const el=document.getElementById('delve-area');if(!el)return;
   const dv=G.delve;
 
-  if(!dv.grid||Object.keys(dv.grid.nodes).length===0||dv.grid._genVer!=='378h')dvInitGrid();
+  if(!dv.grid||Object.keys(dv.grid.nodes).length===0)dvInitGrid();
   dvEnsureGenerated();
 
   // Режим: 'info'=сведения, 'map'=шахта стандарт, 'big'=большой без шапки
@@ -1204,8 +1204,44 @@ function _dvAttachCanvas(dv){
 
 function dvRegenGrid(){
   const dv=G.delve;
-  dv.depth=0;
-  dvInitGrid();
+  const savedDepth=dv.depth||0;
+  // Сбрасываем состояние анимации перед пересозданием
+  _dv.animating=false;
+  _dv.camTarget=null;
+  _dv.camColTarget=null;
+  if(_dv._raf){cancelAnimationFrame(_dv._raf);_dv._raf=null;}
+  // dvInitGrid генерирует строки 0..DV_ROWS_AHEAD
+  // Сразу ставим игрока и камеру на нужную глубину ДО генерации
+  if(savedDepth>0){
+    const targetRow=Math.ceil(savedDepth/5);
+    // Создаём чистую сетку сразу с правильными параметрами
+    dv.grid={
+      nodes:{},edges:[],
+      playerCol:9,playerRow:targetRow,
+      cameraRow:targetRow,cameraCol:9,
+      minRowVisible:Math.max(0,targetRow-2),
+      generatedRows:targetRow,selectedKey:null,
+      _genVer:'378h',_mainCols:null
+    };
+    const g=dv.grid;
+    dv.depth=targetRow*5;
+    dvGenChunk(g,targetRow,targetRow+DV_ROWS_AHEAD);
+    // Ставим игрока на реальный узел
+    let placed=false;
+    for(let dr=0;dr<=3&&!placed;dr++){
+      for(let dc=0;dc<=4&&!placed;dc++){
+        for(const col of [9,9+dc,9-dc]){
+          const k=col+'_'+(targetRow+dr);
+          if(g.nodes[k]){g.playerCol=g.nodes[k].col;g.playerRow=g.nodes[k].row;g.nodes[k].visited=true;placed=true;break;}
+        }
+      }
+    }
+    dv.depth=g.playerRow*5;
+    g.cameraRow=g.playerRow;g.cameraCol=g.playerCol;
+    dvEnsureGenerated();
+  } else {
+    dvInitGrid();
+  }
   renderDelve();
   save();
   log('🔄 Шахта пересоздана','info');
@@ -1233,6 +1269,7 @@ function dvEvacuate(){
     _dv.camTarget=n.row;_dv.camColTarget=n.col;
   }
   g.selectedKey=null;
+  if(!_dv._raf)_dv._raf=requestAnimationFrame(_dvAnimFrame);
   updateRes();dvRender();dvUpdateInfoBar();
   log('Эвакуация! -'+COST+gi(16),'ev');
   showN('Эвакуирован на центр','ge');
