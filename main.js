@@ -1,11 +1,42 @@
 // main.js — точка входа
 // Зависимости: все модули
 
+// ══════════════════════════════════════════════════════
+// ПРЕДЗАГРУЗКА РЕСУРСОВ
+// Группа 1 (сразу): текстура и свиток журнала, маленькие портреты
+// Группа 2 (после группы 1, макс 4с): подложки карт MAP_IMAGES
+// Группа 3 (после группы 2, макс 5с): большие портреты portBig
+// ══════════════════════════════════════════════════════
+function _preloadGroup(urls,onDone){
+  window._preloadCache=window._preloadCache||[];
+  if(!urls.length){if(onDone)onDone();return;}
+  let done=0;const total=urls.length;const timeout=Math.max(4000,total*800);
+  let finished=false;
+  function finish(){if(finished)return;finished=true;if(onDone)onDone();}
+  const timer=setTimeout(finish,timeout);
+  urls.forEach(src=>{
+    const i=new Image();
+    i.onload=i.onerror=()=>{done++;window._preloadCache.push(i);if(done>=total){clearTimeout(timer);finish();}};
+    i.src=src;
+  });
+}
+
 function preloadPortraits(){
-  window._preloadedPortraits=[];
-  Object.values(WCLS).forEach(c=>{
-    if(c.port){const i=new Image();i.src=c.port;window._preloadedPortraits.push(i);}
-    if(c.portBig){const i=new Image();i.src=c.portBig;window._preloadedPortraits.push(i);}
+  // Группа 1: журнал + маленькие портреты
+  const g1=[
+    'https://raw.githubusercontent.com/reiinf/Kalguur/main/images/leather.png',
+    'https://raw.githubusercontent.com/reiinf/Kalguur/main/images/scroll.png',
+    ...Object.values(WCLS).filter(c=>c.port).map(c=>c.port),
+  ];
+  // Группа 2: подложки карт
+  const g2=Object.values(MAP_IMAGES||{});
+  // Группа 3: большие портреты
+  const g3=Object.values(WCLS).filter(c=>c.portBig).map(c=>c.portBig);
+
+  _preloadGroup(g1,()=>{
+    _preloadGroup(g2,()=>{
+      _preloadGroup(g3,null);
+    });
   });
 }
 
