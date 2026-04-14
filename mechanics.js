@@ -385,7 +385,7 @@ function selfRun(){
   G.selfRun={md,tier,cursed,uniq,isGrd,isBoss,grdId:isGrd?key.slice(4):null,bossId,elapsed:0,cost,
     goldRange:[goldMin(md,_mcCost),goldMax(md,_mcCost)],mapKey:key};
   if(!isGrd&&!isBoss&&G.selMapVariant!=null){if(!G._lastVariants)G._lastVariants={};G._lastVariants[String(key)]=G.selMapVariant;}
-  document.getElementById('rpw').style.display='block';
+  document.getElementById('rpw').style.visibility='visible';
   document.getElementById('btn-cancel-run').style.display='inline-block';
   document.getElementById('btn-self-run').disabled=true;
   document.getElementById('rpl').textContent=(isGrd?'🔷 ':(cursed?'💜 ':uniq?'🟠 ':'')+'')+md.em+' '+(isGrd&&md.boss?md.boss:uniq&&G.uniqMapData&&G.uniqMapData[key]?G.uniqMapData[key].nm:md.nm)+' ['+(isGrd?'Страж':isBoss?'БОСС':'T'+tier)+']';
@@ -404,7 +404,7 @@ function selfRun(){
 }
 function cancelRun(){if(!G.selfRun)return;G.selfRun=null;resetRunUI();_mc_stop();G.selMapVariant=null;log('⚠ Отступили.','ev');}
 function resetRunUI(){
-  document.getElementById('rpw').style.display='none';
+  document.getElementById('rpw').style.visibility='hidden';
   document.getElementById('btn-cancel-run').style.display='none';
   document.getElementById('btn-self-run').disabled=false;
   const f=document.getElementById('rpf');if(f)f.style.width='0%';
@@ -546,10 +546,10 @@ function updateRunVis(md,idle,isGrd,isBoss){
     return;
   }
   const col=isGrd?'#44aaff':tcol(md.t);
-  let ch='';if(idle){const _sk=String(G.selMap||'');const _eff=md.t+(_sk.startsWith('c')?1:0)+(_sk.startsWith('u')?1:0);const _grdMod=_sk.startsWith('grd_')?-.12:0;const _rawCv=calcCh(sDmg()+sSurv(),Math.min(16,_eff))+_grdMod;const _isBossKey=_sk.startsWith('boss_');const _bossId=_isBossKey?_sk.replace('boss_',''):null;const _bossCap=_bossId==='shaper'?0.70:_isBossKey?0.80:null;const cv=delModCh(Math.max(.03,_sk.startsWith('grd_')?Math.min(0.85,_rawCv):_isBossKey?Math.min(_bossCap,_rawCv+(_sk.startsWith('grd_')?-0.12:0)):_rawCv));const _capForDisplay=_sk.startsWith('grd_')?0.85:_bossCap;
+  let ch='';{const _sk=String(G.selMap||'');const _eff=md.t+(_sk.startsWith('c')?1:0)+(_sk.startsWith('u')?1:0);const _grdMod=_sk.startsWith('grd_')?-.12:0;const _rawCv=calcCh(sDmg()+sSurv(),Math.min(16,_eff))+_grdMod;const _isBossKey=_sk.startsWith('boss_');const _bossId=_isBossKey?_sk.replace('boss_',''):null;const _bossCap=_bossId==='shaper'?0.70:_isBossKey?0.80:null;const cv=delModCh(Math.max(.03,_sk.startsWith('grd_')?Math.min(0.85,_rawCv):_isBossKey?Math.min(_bossCap,_rawCv+(_sk.startsWith('grd_')?-0.12:0)):_rawCv));const _capForDisplay=_sk.startsWith('grd_')?0.85:_bossCap;
     const _capPctDisplay=_capForDisplay!==null?Math.round(delModCh(_capForDisplay)*100):null;
     const _isCappedDisplay=_capForDisplay!==null&&_rawCv>=_capForDisplay-0.001;
-    ch='<div style="margin-top:4px;font-size:13px;color:'+chcol(cv)+'">Ваш шанс: '+Math.round(cv*100)+'%'+
+    ch='<div style="margin-top:4px;font-size:13px;color:'+chcol(cv)+';visibility:'+(idle?'visible':'hidden')+'">Ваш шанс: '+Math.round(cv*100)+'%'+
       (_capPctDisplay!==null?'<span style="font-size:10px;color:'+(_isCappedDisplay?'#ff9944':'var(--txt-d)')+';margin-left:5px">(кап '+_capPctDisplay+'%)</span>':'')+
       '</div>';}
   const cost=SHOP_COSTS[md.t]||0;
@@ -567,9 +567,26 @@ function updateRunVis(md,idle,isGrd,isBoss){
         _orbWrap.innerHTML='<button class="btn btn-sm" style="opacity:.35;cursor:not-allowed;margin-bottom:4px" disabled>🔮 Нет сфер делириума</button>';
     }else{_orbWrap.innerHTML='';}
   }
-  el.innerHTML='<div class="run-nm" style="color:'+col+'">'+md.em+' '+(isGrd&&md.boss?md.boss:md.nm)+'</div>'+
+  // Фоновая картинка: ключ для обычных карт — строка тира, для остальных — null пока
+  const _imgKey=(!isGrd&&!isBoss)?String(md.t):null;
+  const _imgUrl=_imgKey&&MAP_IMAGES[_imgKey]?MAP_IMAGES[_imgKey]:null;
+  const _runVis=el.parentElement;
+  if(_runVis){
+    if(_imgUrl){
+      _runVis.style.backgroundImage='url('+_imgUrl+')';
+      _runVis.style.backgroundSize='cover';
+      _runVis.style.backgroundPosition='center';
+      _runVis.classList.add('has-bg');
+    } else {
+      _runVis.style.backgroundImage='';
+      _runVis.classList.remove('has-bg');
+    }
+  }
+  el.innerHTML='<div class="run-info-overlay">'+
+    '<div class="run-nm" style="color:'+col+'">'+md.em+' '+(isGrd&&md.boss?md.boss:md.nm)+'</div>'+
     '<div class="dim" style="font-size:11px;letter-spacing:2px;margin-bottom:4px">'+(isGrd?'КАРТА СТРАЖА':isBoss?'ПОРТАЛ СОЗДАТЕЛЯ':'КАРТА ТИРА '+md.t)+'</div>'+
-    '<div style="font-size:13px;color:var(--txt-d)">⏱ ~'+(()=>{const spd=G.syndRunSpeed||1.0;const dlw=G._deliriumMode?1.5:1;const t=Math.round(md.time/spd*dlw);return t;})()+(()=>{const spd2=G.syndRunSpeed||1.0;const dlw2=G._deliriumMode?1.5:1;return 'с'+(spd2>1.0?' <span style="color:#ffaa44">(×'+spd2.toFixed(1)+'⚡)</span>':'')+(dlw2>1?' <span style="color:#7799bb">(×'+dlw2.toFixed(1)+'🐢)</span>':'')+' &nbsp; ';})()+gi(16)+(goldMin(md,cost))+(goldMax(md,cost)>goldMin(md,cost)?'-'+goldMax(md,cost):'')+' + предметы</div>'+ch;
+    '<div style="font-size:13px;color:var(--txt-d)">⏱ ~'+(()=>{const spd=G.syndRunSpeed||1.0;const dlw=G._deliriumMode?1.5:1;const t=Math.round(md.time/spd*dlw);return t;})()+(()=>{const spd2=G.syndRunSpeed||1.0;const dlw2=G._deliriumMode?1.5:1;return 'с'+(spd2>1.0?' <span style="color:#ffaa44">(×'+spd2.toFixed(1)+'⚡)</span>':'')+(dlw2>1?' <span style="color:#7799bb">(×'+dlw2.toFixed(1)+'🐢)</span>':'')+' &nbsp; ';})()+gi(16)+(goldMin(md,cost))+(goldMax(md,cost)>goldMin(md,cost)?'-'+goldMax(md,cost):'')+' + предметы</div>'+ch+
+    '</div>';
   // Показываем миникарту при выборе карты (idle) — только если нет активного забега
   if(idle&&!isGrd&&!isBoss&&!G.selfRun){
     const _mk=String(G.selMap||'');
