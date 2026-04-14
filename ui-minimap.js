@@ -218,7 +218,9 @@ function _mc_draw(){
   const{ctx,W,H,poly,walls,allT,killed,pos,start}=_mc;
   ctx.shadowBlur=0;ctx.shadowColor='transparent';
   // фон
-  ctx.fillStyle='#09080e';ctx.fillRect(0,0,W,H);
+  ctx.clearRect(0,0,W,H);
+  // полупрозрачный фон снаружи полигона
+  ctx.fillStyle='rgba(10,8,6,0.75)';ctx.fillRect(0,0,W,H);
   ctx.fillStyle='#141210';
   ctx.beginPath();ctx.moveTo(poly[0][0],poly[0][1]);for(let i=1;i<poly.length;i++)ctx.lineTo(poly[i][0],poly[i][1]);ctx.closePath();ctx.fill();
   // внешняя растушёвка
@@ -246,7 +248,7 @@ function _mc_draw(){
     ctx.beginPath();walls.forEach(([x1,y1,x2,y2])=>{ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);});ctx.stroke();
   }
   // контур poly
-  ctx.strokeStyle='#6868a0';ctx.lineWidth=1.2;ctx.lineJoin='round';
+  ctx.strokeStyle='#5a4a2a';ctx.lineWidth=1.2;ctx.lineJoin='round';
   ctx.beginPath();ctx.moveTo(poly[0][0],poly[0][1]);for(let i=1;i<poly.length;i++)ctx.lineTo(poly[i][0],poly[i][1]);ctx.closePath();ctx.stroke();
   // старт
   ctx.fillStyle='#1a3a1a';ctx.beginPath();ctx.arc(start[0],start[1],4,0,Math.PI*2);ctx.fill();

@@ -263,7 +263,7 @@ const ACHDEFS=[
 // ══════════ MAP IMAGES ══════════════════════════════════════════
 const MAP_IMAGES = {
   '1': 'https://raw.githubusercontent.com/reiinf/Kalguur/main/images/maps/t1.webp',
-  // '2': 'https://raw.githubusercontent.com/reiinf/Kalguur/main/images/maps/t2.webp',
+  '2': 'https://raw.githubusercontent.com/reiinf/Kalguur/main/images/maps/t2.webp',
   // '3': 'https://raw.githubusercontent.com/reiinf/Kalguur/main/images/maps/t3.webp',
   // '4': 'https://raw.githubusercontent.com/reiinf/Kalguur/main/images/maps/t4.webp',
   // '5': 'https://raw.githubusercontent.com/reiinf/Kalguur/main/images/maps/t5.webp',

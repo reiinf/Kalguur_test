@@ -164,13 +164,8 @@ h1{font-family:'Cinzel',serif;font-size:23px;font-weight:900;color:var(--gold);t
 .run-vis.has-bg{
   background-color: transparent;
 }
-.run-vis.has-bg::after{
-  content:'';
-  position:absolute;
-  inset:0;
-  background:rgba(0,0,0,0.30);
-  pointer-events:none;
-  z-index:0;
+.run-vis.has-bg .run-bg{
+  display:none;
 }
 .run-info-overlay{
   display:inline-block;
