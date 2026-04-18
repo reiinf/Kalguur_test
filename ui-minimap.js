@@ -103,11 +103,13 @@ let _mc={active:false};
 function _mc_init(tier,vi){
   const key='t'+tier;
   const layout=MAP_LAYOUTS[key];
-  if(!layout){_mc.active=false;return;}
+  if(!layout){_mc.active=false;const st=document.getElementById('mc-stub');if(st)st.style.display='flex';const wr=document.getElementById('mc-wrap');if(wr)wr.style.display='none';return;}
   if(vi==null)vi=Math.floor(Math.random()*layout.variants.length);
   const v=layout.variants[vi];
   const c=document.getElementById('map-canvas');
   if(!c)return;
+  const wr=document.getElementById('mc-wrap');if(wr)wr.style.display='flex';
+  const st2=document.getElementById('mc-stub');if(st2)st2.style.display='none';
   const dpr=window.devicePixelRatio||1;
   const W=160,H=160,pad=0.05;
   c.width=W;c.height=H;
@@ -166,6 +168,8 @@ function _mc_stop(){
   if(_mc._raf){cancelAnimationFrame(_mc._raf);_mc._raf=null;}
   const c=document.getElementById('map-canvas');
   if(c){c.style.opacity='0';c.getContext('2d').clearRect(0,0,c.width,c.height);}
+  const st=document.getElementById('mc-stub');if(st)st.style.display='none';
+  const wr=document.getElementById('mc-wrap');if(wr)wr.style.display='none';
 }
 
 // _mc_tick: вызывается каждые 200мс с pct 0..1
