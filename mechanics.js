@@ -394,7 +394,9 @@ function selfRun(){
   updateRunVis(md,false,isGrd,isBoss);renderMaps();
   // Не переинициализируем миникарту — используем тот же лейаут что показывался при выборе
   // Сбрасываем позицию на старт и выставляем скорость
-  if(_mc.active){
+  if(isGrd||isBoss){
+    // У гвардов/боссов нет миникарты
+  } else if(_mc.active){
     if(_mc._raf){cancelAnimationFrame(_mc._raf);_mc._raf=null;}
     const _spd=G.syndRunSpeed||1.0;_mc.pos=[..._mc.start];_mc.wi=0;_mc.si=0;_mc.killed=[];_mc._traveled=0;_mc._targetDist=0;_mc._lastTs=null;_mc._mapDurMs=md.time*1000/_spd*(G._deliriumMode?1.5:1);_mc.running=true;
     if(!_mc._raf)_mc._raf=requestAnimationFrame(_mc_rafLoop);
