@@ -2,12 +2,17 @@
 // Зависимости: mechanics.js, utils.js
 
 function renderAll(){applyUnlocks();
+  // Авто-выбор карты T1 если ничего не выбрано (старт игры, возвышение)
+  {const _sk=String(G.selMap||'');const _noSel=!G.selMap||(!G.maps[_sk]&&!_sk.startsWith('grd_')&&!_sk.startsWith('boss_'));if(_noSel){const _t1=Object.keys(G.maps).filter(k=>!isNaN(k)&&G.maps[k]>0).map(Number).sort((a,b)=>a-b)[0];if(_t1)G.selMap=_t1;}}
   // Restore/set active left tab
   {const _vt=['maps','shop','inv','atlas','ach','upg'].filter(t=>{const b=document.getElementById('tabbtn-'+t);return b&&b.style.display!=='none';});
   const _tr=(G.activeTab&&G.activeTab!=='acts'&&_vt.includes(G.activeTab))?G.activeTab:(_vt[0]||'maps');
   document.querySelectorAll('#left-panel .tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===_tr));
   document.querySelectorAll('#left-panel .tabpanel').forEach(p=>p.classList.toggle('active',p.id==='tab-'+_tr));
-  G.activeTab=_tr;}updateAchBadge();renderMaps();renderShop();renderInv();renderActs();renderWorkers();renderUpgrades();renderAtlasBar();renderAtlasTab();renderAchs();renderDelirium();renderDelve();updateRes();updateStats();updateSelfStats();updateDeliriumTab();}
+  G.activeTab=_tr;}updateAchBadge();renderMaps();renderShop();renderInv();renderActs();renderWorkers();renderUpgrades();renderAtlasBar();renderAtlasTab();renderAchs();renderDelirium();renderDelve();updateRes();updateStats();updateSelfStats();updateDeliriumTab();
+  // Обновить портал карты для авто-выбранной карты
+  if(G.selMap&&!G.selfRun){const _sk2=String(G.selMap);const _md2=getMd(_sk2);if(_md2)updateRunVis(_md2,true,_sk2.startsWith('grd_'),_sk2.startsWith('boss_'));else updateRunVis(null);}
+}
 
 function renderMaps(){
   const el=document.getElementById('tab-maps');if(!el)return;
@@ -134,4 +139,3 @@ function selectMap(key){
   if(!G.selfRun)updateRunVis(md,true,isGrdKey,k.startsWith('boss_'));
   updateSelfStats();renderWorkers();
 }
-
