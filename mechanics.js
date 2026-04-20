@@ -292,6 +292,8 @@ function tryItem(md,cls,mult=1){
   const _cluDp=(G.selfEq&&G.selfEq.cluster?(G.selfEq.cluster.mods||[]).reduce((s,m)=>s+(m.stat==='dropPct'?m.value:0),0):0)+passiveVal('dropPct');
   if(Math.random()>md.drop*mult*(1+_cluDp/100))return;
   const it=genItem(md.t,cls);G.inv.push(it);G.stats.fi++;
+  // Пульсация кнопки Снаряжение при первой находке
+  if(G.stats.fi===1){setTimeout(()=>{const _w=document.getElementById('inv-btn-wrap');if(_w)_w.classList.add('inv-pulse');},50);}
   // Auto-sell (Maraketh T4)
   if((hasFaction('maraketh')||hasLegacyBonus('mara_3'))&&G.factionUnlocks.autoSellItems&&G.autoSellRules&&G.autoSellRules[it.quality]&&it.quality!=='unique'){
     const gold=parseInt(it.sellPrice)||0;G.gold+=gold;G.inv=G.inv.filter(x=>x.id!==it.id);
@@ -522,7 +524,6 @@ function completeSelfRun(){
         G.inv.push(_gift);G.stats.fi++;
         log('🎁 Первая находка! '+_gift.em+' '+_gift.name+' — за 4-ю пройденную карту','i-'+_gift.quality[0]);
         showN('🎁 Первая находка: '+_gift.em+' '+_gift.name,'pur');
-        setTimeout(()=>{const _invBtn=document.getElementById('inv-btn-wrap');if(_invBtn)_invBtn.classList.add('inv-pulse');},50);
       }
     }
     addXPSelf(xpAmt(tier));
@@ -911,6 +912,7 @@ function checkAchs(){
   if((G.stats.delMaxWave||0)>=5)grant('del_wave5');
   if((G.stats.delMaxWave||0)>=10)grant('del_wave10');
   if((G.stats.delMaxWave||0)>=20)grant('del_wave20');
+
   if(G.prestige>=1)grant('pres_1');
   if(G.prestige>=3)grant('pres_3');
   if(G.prestige>=5)grant('pres_5');

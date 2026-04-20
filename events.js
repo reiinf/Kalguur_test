@@ -49,7 +49,7 @@ document.addEventListener('click',function(e){
     openM('Выбрать класс?','<div style="text-align:center;padding:8px">'+
       '<div style="font-size:32px;margin-bottom:8px">'+(_cd.em||'🧙')+'</div>'+
       '<div style="font-size:16px;margin-bottom:4px;color:var(--gold)">'+(_cd.nm||_nc)+'</div>'+
-      '<div style="font-size:13px;color:var(--txt-d);margin-bottom:16px">Влияет на боевые характеристики. Сменить можно будет в Лавке за 200'+gi(16)+'</div>'+
+      '<div style="font-size:13px;color:var(--txt-d);margin-bottom:16px">Влияет на боевые характеристики. <span style="white-space:nowrap">Сменить можно будет в Лавке за 200'+gi(16)+'</span></div>'+
       '<div style="display:flex;gap:8px">'+
       '<button class="btn" style="flex:1" onclick="closeM()">Отмена</button>'+
       '<button class="btn btn-p" style="flex:1" onclick="closeM();G.selfCls=\''+_nc+'\';log(\'Выбран класс: \'+WCLS[\''+_nc+'\'].nm,\'info\');updateSelfStats&&updateSelfStats();G.clsLocked=true;updateSelfStats();applyUnlocks();save()">Выбрать</button>'+

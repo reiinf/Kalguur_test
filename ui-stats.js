@@ -119,7 +119,7 @@ function updateSelfStats(){
     const active=cl===(G.selfCls||'warrior');
     b.style.borderColor=active?'var(--gold)':'var(--gold-d)';
     b.disabled=G.clsLocked&&!active;
-    b.title=G.clsLocked&&!active?'Класс заблокирован. Смените в Лавке за 200'+gi(16):'';
+    b.title=G.clsLocked&&!active?'Класс заблокирован. Смените в Лавке за 200💰':'';
   });
   const ec=document.getElementById('s-ch');
   if(ec){

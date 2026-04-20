@@ -1106,6 +1106,10 @@ function resolveDelveRunGrid(node,inDark,fromCol,fromRow){
   log('⛏️ Гл.'+depth+' ['+loc.nm+']: '+msgs.join(', '),'ge');
   floatT('⛏️ находка','#88ccff');
   addXPSelf(xpAmt(Math.max(1,Math.min(16,Math.ceil(depth/10)))));
+  // Ачивки за шахту — только при реальном прохождении узла
+  grantAch('delve_enter');
+  if(dv.depth>=100)grantAch('delve_d100');
+  if(dv.depth>=160)grantAch('delve_d160');
   updateRes();checkAchs();
   // Флэш наград поверх canvas
   const flashLines=['<span style="color:#c8a040">⛏ Гл.'+depth+'</span> <span style="color:#888">'+loc.nm+'</span>'].concat(msgs);
