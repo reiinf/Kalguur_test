@@ -8,7 +8,7 @@ function openM(title,html){
   mbd.innerHTML=html;
   document.getElementById('moverlay').classList.add('on');
 }
-function closeM(){document.getElementById('moverlay').classList.remove('on');}
+function closeM(){const _ov=document.getElementById('moverlay');_ov.classList.remove('on');_ov._tutorialLock=false;}
 
 function openBigPortrait(wid){
   const w=G.workers.find(x=>x.id===wid);

@@ -5,7 +5,7 @@ function openTutorial(){
   openM('⚔️ Добро пожаловать, Изгнанник!',
     '<div style="font-size:14px;line-height:1.7">'+
     '<p style="color:var(--txt-d);margin-bottom:12px">Ты оказался в землях Калгуура. Чтобы выжить — сражайся, торгуй и возвышайся.</p>'+
-    '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">'+
+    '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">'+
       '<div style="background:var(--bg2);border:1px solid var(--brd);padding:8px 12px;border-radius:4px">'+
         '<div style="color:var(--gold);font-weight:600;margin-bottom:3px">🏕 Шаг 1 — Акты</div>'+
         '<div style="color:var(--txt-d);font-size:13px">Проходи <b style="color:var(--gold)">Акты</b> чтобы прокачать персонажа и заработать стартовое золото.</div>'+
@@ -19,9 +19,14 @@ function openTutorial(){
         '<div style="color:var(--txt-d);font-size:13px">Пройди все 16 тиров — и тебе откроется <b style="color:var(--gold)">Возвышение</b>. Выбери фракцию, сбрось прогресс и начни с уникальными бонусами.</div>'+
       '</div>'+
     '</div>'+
+    '<div style="background:rgba(60,50,20,.4);border:1px solid #665533;border-radius:4px;padding:8px 12px;margin-bottom:16px;font-size:12px;color:#bbaa77">'+
+      '💡 <b style="color:var(--gold)">Механики открываются постепенно</b> по мере прохождения'+
+    '</div>'+
     '<button class="btn btn-p" style="width:100%" onclick="closeM()">⚔️ Начать</button>'+
     '</div>'
   );
+  // Запрещаем закрытие туториала кликом на оверлей — только кнопка
+  document.getElementById('moverlay')._tutorialLock=true;
 }
 function manualSave(){
   save();

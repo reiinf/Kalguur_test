@@ -35,7 +35,7 @@ document.addEventListener('click',function(e){
     document.querySelectorAll('#left-panel .tabpanel').forEach(p=>p.classList.remove('active'));
     const ep=document.getElementById('tab-'+tab);if(ep)ep.classList.add('active');
     tabBtn.classList.add('active');
-    if(tab==='inv'){renderInv();const _ib=document.getElementById('tabbtn-inv');if(_ib)_ib.classList.remove('inv-pulse');}else if(tab==='acts')renderActs();
+    if(tab==='inv'){renderInv();}else if(tab==='acts')renderActs();
     else if(tab==='atlas')renderAtlasTab();else if(tab==='ach')renderAchs();
 
     return;
@@ -74,7 +74,7 @@ document.addEventListener('click',function(e){
   // Fixed buttons
   if(t.id==='btn-self-run'){selfRun();return;}
   if(t.id==='btn-cancel-run'){cancelRun();return;}
-  if(t.id==='btn-self-eq'){openSelfEq();return;}
+  if(t.id==='btn-self-eq'){const _w=document.getElementById('inv-btn-wrap');if(_w)_w.classList.remove('inv-pulse');openSelfEq();return;}
   if(t.id==='btn-hire'){openHire();return;}
   if(t.id==='btn-expedition'){openExpedition();return;}
   if(t.id==='btn-debug'){openDebug();return;}
@@ -243,7 +243,7 @@ document.addEventListener('click',function(e){
   const iico=cl('[data-iid]');if(iico){openItemM(parseInt(iico.dataset.iid));return;}
   if(t.dataset.sellId){sellItem(parseInt(t.dataset.sellId));return;}
   if(t.dataset.discardId){discardItem(parseInt(t.dataset.discardId));return;}
-  if(t.id==='moverlay'||t===document.getElementById('moverlay')){closeM();return;}
+  if(t.id==='moverlay'||t===document.getElementById('moverlay')){if(t._tutorialLock)return;closeM();return;}
 });
 document.addEventListener('mousemove',function(e){
   const el=e.target.closest?e.target.closest('[data-tip]'):null;

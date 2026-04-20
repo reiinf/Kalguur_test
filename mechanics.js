@@ -522,8 +522,7 @@ function completeSelfRun(){
         G.inv.push(_gift);G.stats.fi++;
         log('🎁 Первая находка! '+_gift.em+' '+_gift.name+' — за 4-ю пройденную карту','i-'+_gift.quality[0]);
         showN('🎁 Первая находка: '+_gift.em+' '+_gift.name,'pur');
-        const _invBtn=document.getElementById('tabbtn-inv');
-        if(_invBtn)_invBtn.classList.add('inv-pulse');
+        setTimeout(()=>{const _invBtn=document.getElementById('inv-btn-wrap');if(_invBtn)_invBtn.classList.add('inv-pulse');},50);
       }
     }
     addXPSelf(xpAmt(tier));
@@ -1056,7 +1055,11 @@ function openFactionChoice(selFac){
   openM('✨ Возвышение',html);
   if(_isLegacySel){
     const _lb=document.getElementById('btn-legacy-pick-open');
-    if(_lb)_lb.onclick=()=>openLegacyPick();
+    if(_lb)_lb.onclick=()=>{
+      const _dc=document.getElementById('del-mode-check');
+      window._pendingDeliriumMode=_dc?_dc.checked:false;
+      openLegacyPick();
+    };
   }
 }
 function openLegacyPick(pendingPerks){
@@ -1139,7 +1142,9 @@ function confirmPrestige(factionId){
   const np=(G.prestige||0)+1,nb=np*15,kg=Math.floor(G.gold*.15);
   // Проверяем чекбокс делириума
   const _delCheck=document.getElementById('del-mode-check');
-  const _enterDel=_delCheck&&_delCheck.checked&&(G.deliriumSplinters||0)>=100&&!G._deliriumModeUnlocked;
+  const _delWanted=_delCheck?_delCheck.checked:(window._pendingDeliriumMode||false);
+  window._pendingDeliriumMode=false;
+  const _enterDel=_delWanted&&(G.deliriumSplinters||0)>=100&&!G._deliriumModeUnlocked;
   const lstats={...G.stats};const lruns=G.totalRuns;
   const lachs={...G.achs};const lpend={...(G.achsPending||{})};
   const lfxp={...(G.factionXp||{})};const lfunl={...(G.factionUnlocks||{})};const lpass={...(G.passives||{})};
