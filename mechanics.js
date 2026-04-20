@@ -622,9 +622,16 @@ function updateRunVis(md,idle,isGrd,isBoss){
   } else {
     const _stub=document.getElementById('mc-stub');
     const _cv=document.getElementById('map-canvas');
-    const _hasLay=!!MAP_LAYOUTS['t'+md.t];
-    if(_hasLay){if(_stub)_stub.style.display='none';if(_cv)_cv.style.display='';}
-    else{if(_cv){_cv.style.display='none';_cv.style.opacity='0';}if(_stub)_stub.style.display='flex';}
+    if(isGrd||isBoss){
+      _mc_stop();
+      const _wr=document.getElementById('mc-wrap');if(_wr)_wr.style.display='none';
+      if(_cv){_cv.style.display='none';_cv.style.opacity='0';}
+      if(_stub)_stub.style.display='none';
+    } else {
+      const _hasLay=!!MAP_LAYOUTS['t'+md.t];
+      if(_hasLay){if(_stub)_stub.style.display='none';if(_cv)_cv.style.display='';}
+      else{if(_cv){_cv.style.display='none';_cv.style.opacity='0';}if(_stub)_stub.style.display='flex';}
+    }
   }
 }
 function startAct(id){
