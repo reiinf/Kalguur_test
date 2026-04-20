@@ -49,7 +49,7 @@ const ACTS=[
   {id:'a2',nm:'Акт 2: Лагерь бродяг',em:'🌄',time:10,g:[6,14],  xp:55},
   {id:'a3',nm:'Акт 3: Поля сражений',em:'🗡️',time:17,g:[10,22], xp:70},
 ];
-const WLVLS=[0,60,120,300,700,1500,3000,5500,9000,14000,21000];
+const WLVLS=[0,70,150,230,700,1500,3000,5500,9000,14000,21000];
 const SLOTS=['weapon','armor','helmet','ring','cluster'];
 const SLOTNM={weapon:'⚔️ Оружие',weapon2:'⚔️ Оружие 2',armor:'🛡️ Броня',helmet:'⛑️ Шлем',ring:'💍 Кольцо',cluster:'🔮 Кластерный самоцвет',cluster2:'🔮 Кластерный самоцвет 2'};
 function slotNm(slot,iconSize){const s=SLOTNM[slot]||slot;return s.replace(/^(\S+)\s/,(m,em)=>{const ico=itemIcon(em,iconSize||14);return ico!=='<span'+' style="font-size:'+iconSize+'px">'+em+'</span>'?ico+' ':m;});}

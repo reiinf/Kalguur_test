@@ -514,6 +514,18 @@ function completeSelfRun(){
       if(tier===16&&!cursed&&!uniq&&!isGrd)checkT16BossUnlock();
     }
     if(!isBoss){for(let i=0;i<lm;i++)tryItem(md,G.selfCls,1);tryMap(md);}
+    // Гарантированная шмотка за 4ю пройденную карту (только один раз)
+    if(!isBoss&&!isGrd){
+      G.stats.selfClears=(G.stats.selfClears||0)+1;
+      if(G.stats.selfClears===4){
+        const _gift=genItem(2,G.selfCls||'warrior');
+        G.inv.push(_gift);G.stats.fi++;
+        log('🎁 Первая находка! '+_gift.em+' '+_gift.name+' — за 4-ю пройденную карту','i-'+_gift.quality[0]);
+        showN('🎁 Первая находка: '+_gift.em+' '+_gift.name,'pur');
+        const _invBtn=document.getElementById('tabbtn-inv');
+        if(_invBtn)_invBtn.classList.add('inv-pulse');
+      }
+    }
     addXPSelf(xpAmt(tier));
     checkAchs();renderAtlasBar();renderShop();updateDeliriumTab();renderDelirium();renderDelve();applyUnlocks();
   }else{
@@ -907,9 +919,12 @@ function checkAchs(){
   if((G.bossKills&&G.bossKills.shaper||0)>=1)grant('kill_shaper');
   if((G.bossKills&&G.bossKills.exarch||0)>=1)grant('kill_exarch');
   if((G.bossKills&&G.bossKills.eater||0)>=1)grant('kill_eater');
-  // Все ачивки (кроме самой all_achs)
+  // Все ачивки (кроме самой all_achs) — проверяем и claimed и pending
+  // Не отбирается при появлении новых ачивок (grantAch не перезаписывает уже выданные)
   const _allIds=ACHDEFS.filter(a=>a.id!=='all_achs').map(a=>a.id);
-  if(_allIds.every(id=>G.achs&&G.achs[id]))grant('all_achs');
+  if(!( G.achs&&G.achs['all_achs'])&&!(G.achsPending&&G.achsPending['all_achs'])){
+    if(_allIds.every(id=>(G.achs&&G.achs[id])||(G.achsPending&&G.achsPending[id])))grant('all_achs');
+  }
 }
 
 // ══════════ PRESTIGE ══════════════════════════════════════════

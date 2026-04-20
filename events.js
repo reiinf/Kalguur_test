@@ -35,7 +35,7 @@ document.addEventListener('click',function(e){
     document.querySelectorAll('#left-panel .tabpanel').forEach(p=>p.classList.remove('active'));
     const ep=document.getElementById('tab-'+tab);if(ep)ep.classList.add('active');
     tabBtn.classList.add('active');
-    if(tab==='inv')renderInv();else if(tab==='acts')renderActs();
+    if(tab==='inv'){renderInv();const _ib=document.getElementById('tabbtn-inv');if(_ib)_ib.classList.remove('inv-pulse');}else if(tab==='acts')renderActs();
     else if(tab==='atlas')renderAtlasTab();else if(tab==='ach')renderAchs();
 
     return;
