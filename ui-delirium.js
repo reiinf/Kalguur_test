@@ -328,12 +328,19 @@ function tick(){
   if(G.gt%3000===0)renderUpgrades();
   // Auto-buy maps for Maraketh
   if(G.autoBuyMaps&&(hasFaction('maraketh')||hasLegacyBonus('mara_2'))&&G.lastExpSlots&&G.lastExpSlots.length){
-    // Count exactly how many of each tier the last expedition needed
+    // Count idle workers that want to auto-expedition
+    const _idleAutoExp=G.workers.filter(w=>w.status==='idle'&&G.autoExp&&hasMaraFeature());
+    const _needSets=Math.max(1,_idleAutoExp.length);
+    // Count how many of each tier needed per expedition set
     const needed={};G.lastExpSlots.filter(Boolean).forEach(t=>{needed[t]=(needed[t]||0)+1;});
+    // Buy enough for all waiting workers
+    let _bought=false;
     Object.keys(needed).forEach(t=>{
-      const ti=parseInt(t),req=needed[t],cost=mapShopCost(SHOP_COSTS[ti]||0);
-      if(cost>0&&(G.maps[ti]||0)<req&&G.gold>=cost){G.gold-=cost;G.maps[ti]=(G.maps[ti]||0)+1;}
+      const ti=parseInt(t),req=needed[t]*_needSets,cost=mapShopCost(SHOP_COSTS[ti]||0);
+      while(cost>0&&(G.maps[ti]||0)<req&&G.gold>=cost){G.gold-=cost;G.maps[ti]=(G.maps[ti]||0)+1;_bought=true;}
     });
+    // If we bought something — try to restart all waiting idle workers
+    if(_bought)_idleAutoExp.forEach(w=>tryAutoExp(w));
   }
   // Self run
   if(G.selfRun){
