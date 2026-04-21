@@ -212,21 +212,32 @@ document.addEventListener('click',function(e){
   const rescEl=t.dataset.rescue?t:cl('[data-rescue]');if(rescEl&&rescEl.dataset.rescue){rescueW(parseInt(rescEl.dataset.rescue));return;}
   const weqEl=t.dataset.weq?t:cl('[data-weq]');if(weqEl&&weqEl.dataset.weq){openWorkerEq(parseInt(weqEl.dataset.weq));return;}
   const bisEl=t.dataset.workerBis?t:cl('[data-worker-bis]');if(bisEl&&bisEl.dataset.workerBis){workerBestInSlot(parseInt(bisEl.dataset.workerBis));return;}
+  const fireEl=t.dataset.fireWorker?t:cl('[data-fire-worker]');if(fireEl&&fireEl.dataset.fireWorker){fireWorker(parseInt(fireEl.dataset.fireWorker));return;}
+  const fireConfEl=t.dataset.fireConfirm?t:cl('[data-fire-confirm]');if(fireConfEl&&fireConfEl.dataset.fireConfirm){fireWorkerConfirm(parseInt(fireConfEl.dataset.fireConfirm));return;}
   const hireEl=cl('[data-hire]');if(hireEl){hireWorker(hireEl.dataset.hire);return;}
   // Acts
   if(t.dataset.act){startAct(t.dataset.act);return;}
   // Expedition modal
+  const xslotClearEl=t.dataset.xslotClear!==undefined?t:cl('[data-xslot-clear]');
+  if(xslotClearEl&&xslotClearEl.dataset.xslotClear!==undefined){
+    if(window._exp){window._exp.slots[parseInt(xslotClearEl.dataset.xslotClear)]=null;delete window._exp.pickSlot;window._exp.render();}return;
+  }
   const xslotEl=t.dataset.xslot!==undefined?t:cl('[data-xslot]');
   if(xslotEl&&xslotEl.dataset.xslot!==undefined){
     if(window._exp){window._exp.pickSlot=parseInt(xslotEl.dataset.xslot);window._exp.render();}return;
   }
-  const xslotClearEl=t.dataset.xslotClear!==undefined?t:cl('[data-xslot-clear]');
-  if(xslotClearEl&&xslotClearEl.dataset.xslotClear!==undefined){
-    if(window._exp){window._exp.slots[parseInt(xslotClearEl.dataset.xslotClear)]=null;window._exp.render();}return;
-  }
   if(t.dataset.xpick){
-    if(window._exp&&window._exp.pickSlot!==undefined){
-      window._exp.slots[window._exp.pickSlot]=parseInt(t.dataset.xpick);
+    if(window._exp){
+      const _t=parseInt(t.dataset.xpick);
+      const _slots=window._exp.slots;
+      const _tc=window._exp.tierCounts||{};
+      // How many of this tier are already placed
+      const _alreadyUsed=_slots.filter(s=>s===_t).length;
+      let _avail=(_tc[_t]||0)-_alreadyUsed;
+      // Fill empty slots with this tier while cards available
+      for(let i=0;i<_slots.length&&_avail>0;i++){
+        if(_slots[i]===null){_slots[i]=_t;_avail--;}
+      }
       delete window._exp.pickSlot;window._exp.render();
     }return;
   }

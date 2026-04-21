@@ -714,6 +714,8 @@ function resolveWorker(w,md){
 function tryAutoExp(w){
   if(!G.autoExp||!hasMaraFeature())return;
   if(w.status!=='idle')return;
+  const _runningNow=G.workers.filter(x=>x.status==='running'||x.status==='exp').length;
+  if(_runningNow>=1+G.ups.slots)return;
   const maxSlots=(G.factionUnlocks&&G.factionUnlocks.exp5)?5:3;
   // Build available tier counts
   const tierCounts={};
@@ -1289,14 +1291,14 @@ function openExpedition(){
       html+='</div>';
     });
     html+='</div>';
-    // Tier picker
-    if(window._exp.pickSlot!==undefined){
-      const si=window._exp.pickSlot;
-      const used=slots.filter((s,ii)=>ii!==si&&s!==null);
-      html+='<div style="font-size:13px;color:var(--txt-d);margin-bottom:6px">Выберите карту для слота '+(si+1)+':</div>';
+    // Tier picker — show whenever there are empty slots
+    const _hasEmpty=slots.some(s=>s===null);
+    if(_hasEmpty){
+      const _used=slots.filter(s=>s!==null);
+      html+='<div style="font-size:13px;color:var(--txt-d);margin-bottom:6px">Добавить карту:</div>';
       html+='<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px">';
       Object.keys(tierCounts).map(Number).sort((a,b)=>a-b).forEach(t=>{
-        const avail=tierCounts[t]-used.filter(x=>x===t).length;
+        const avail=tierCounts[t]-_used.filter(x=>x===t).length;
         if(avail<=0)return;
         html+='<button class="btn btn-sm" data-xpick="'+t+'">T'+t+' ('+avail+')</button>';
       });
@@ -1330,6 +1332,9 @@ function startExpedition(wid){
   const {slots,tierCounts}=window._exp;
   if(slots.filter(Boolean).length<3){showN('Выберите минимум 3 карты!');return;}
   const w=G.workers.find(x=>x.id===wid);if(!w||w.status!=='idle')return;
+  const _running=G.workers.filter(x=>x.status==='running'||x.status==='exp').length;
+  const _maxS=1+G.ups.slots;
+  if(_running>=_maxS){showN('Нужен апгрейд Машины для ещё одного слота!');return;}
   // Check availability
   const filledSlots=slots.filter(Boolean);
   const needed={};filledSlots.forEach(t=>{needed[t]=(needed[t]||0)+1;});

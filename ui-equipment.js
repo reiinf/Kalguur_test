@@ -37,6 +37,7 @@ function openSelfBigPortrait(){
 
 function openHire(){
   if(!canHireWorkers()){showN('🗡️ Синдикат: работники недоступны!');return;}
+  if(G.workers.length>=5){showN('Максимум 5 работников! Уволь кого-нибудь.');return;}
   const cost=80+G.workers.length*60;
   let html='<div class="dim" style="margin-bottom:8px;font-size:14px">Стоимость: <span class="gt">'+cost+gi(16)+'</span></div>';
   Object.entries(WCLS).filter(([cls])=>cls!=='noble').forEach(([cls,c])=>{
@@ -62,6 +63,7 @@ function wPortrait(cls, col, em, clickHandler){
 }
 
 function hireWorker(cls){
+  if(G.workers.length>=5){showN('Максимум 5 работников! Уволь кого-нибудь.');return;}
   const cost=80+G.workers.length*60;
   if(G.gold<cost){showN('Мало золота! Нужно '+cost+gi(16));return;}
   G.gold-=cost;
@@ -97,6 +99,27 @@ function workerBestInSlot(id){
   else showN('Лучшего снаряжения нет в инвентаре');
   save();renderInv();renderWorkers();renderMaps();openWorkerEq(id);
 }
+function fireWorker(id){
+  const w=G.workers.find(x=>x.id===id);if(!w)return;
+  if(w.status!=='idle'){showN('Работник занят — дождись когда освободится!');return;}
+  const isNamed=!!w.isNamed;
+  const msg=isNamed
+    ?'Уволить [ЛЕГЕНДА] '+w.name+'? Именных работников можно получить снова только при возвышении.'
+    :'Уволить '+w.name+'? Всё снаряжение вернётся на склад.';
+  const html='<div style="padding:8px 0;font-size:15px;color:var(--txt);line-height:1.6">'+msg+'</div>'+
+    '<div style="display:flex;gap:8px;margin-top:10px">'+
+    '<button class="btn btn-r" data-fire-confirm="'+id+'">🔥 Уволить</button>'+
+    '<button class="btn btn-sm" id="btn-close-m">Отмена</button></div>';
+  openM('Уволить работника?', html);
+}
+function fireWorkerConfirm(id){
+  const w=G.workers.find(x=>x.id===id);if(!w)return;
+  // Return all equipped items to inventory
+  Object.keys(w.eq).forEach(sl=>{if(w.eq[sl]){G.inv.push(w.eq[sl]);w.eq[sl]=null;}});
+  G.workers=G.workers.filter(x=>x.id!==id);
+  log('👋 '+w.name+' уволен. Снаряжение возвращено на склад.','info');
+  closeM();renderWorkers();renderInv();updateRes();save();
+}
 function openWorkerEq(id){
   const w=G.workers.find(x=>x.id===id);if(!w)return;
   const xpnm=w.level<WLVLS.length-1?((WLVLS[w.level+1]-w.xp)+' XP до Ур.'+(w.level+1)):'Макс.';
@@ -125,7 +148,8 @@ function openWorkerEq(id){
        '<span class="dim" style="font-size:12px">Пусто</span>')+
     '</div>';
   });
-  html+='</div><div style="display:flex;gap:6px;margin-bottom:6px"><button class="btn btn-sm" style="flex:1" data-worker-bis="'+id+'">⚡ Одеть в лучшее</button><button class="btn btn-r btn-sm" id="btn-close-m">Закрыть</button></div>';
+  html+='</div><div style="display:flex;gap:6px;margin-bottom:6px"><button class="btn btn-sm" style="flex:1" data-worker-bis="'+id+'">⚡ Одеть в лучшее</button><button class="btn btn-r btn-sm" id="btn-close-m">Закрыть</button></div>'+
+    (w.status==='idle'?'<div style="margin-top:4px"><button class="btn btn-r btn-sm" style="width:100%;font-size:12px;opacity:.7" data-fire-worker="'+id+'">🔥 Уволить работника</button></div>':'');
   openM(WCLS[w.cls].em+' '+w.name,html);
 }
 function openSelfEq(){
