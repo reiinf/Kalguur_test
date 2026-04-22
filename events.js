@@ -78,7 +78,6 @@ document.addEventListener('click',function(e){
   if(t.id==='btn-hire'){openHire();return;}
   if(t.id==='btn-expedition'){openExpedition();return;}
   if(t.id==='btn-debug'){openDebug();return;}
-  if(t.id==='btn-reset'){confirmReset();return;}
   if(t.id==='btn-do-reset'){doReset();return;}
   if(t.id==='btn-close-m'){closeM();return;}
   if(tId==='btn-sell-all'){sellAllNormal();return;}

@@ -93,7 +93,7 @@ function applyUnlocks(){
   const unlockLog    = true; // always visible
   const unlockWorkers= unlockAll || maxCleared>=3 || hasWorkers;
   const unlockStats  = unlockAll || maxCleared>=5;
-  const unlockDanger = unlockAll || maxCleared>=3;
+
 
   // ── Res-bar ──
   show('ri-gold','flex');
@@ -130,10 +130,10 @@ function applyUnlocks(){
   const _lp=document.getElementById('log-panel');if(_lp)_lp.style.marginTop='0';
   const _up=document.getElementById('upgrades-panel');if(_up)_up.style.marginTop=unlockLog?'8px':'0';
   // Show right column wrapper when any panel inside is visible
-  const _anyRight=unlockLog||unlockWorkers||unlockStats||unlockDanger;
+  const _anyRight=unlockLog||unlockWorkers||unlockStats;
   show('col-right', _anyRight ? 'block':'none');
   show('stats-panel',    unlockStats   ? 'block':'none');
-  show('danger-panel',   unlockDanger  ? 'block':'none');
+
 
   // Show portal tab button only when maps unlocked
   show('ctab-portal', unlockMaps ? 'flex':'none');

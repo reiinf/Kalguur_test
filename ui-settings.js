@@ -111,11 +111,8 @@ function openSettings(){
     '<div style="font-size:12px;color:var(--txt-d);margin-top:6px;text-align:center" id="font-slider-label">'+(cur===0?'По умолчанию':(cur>0?'+'+cur:cur)+' пт')+'</div>'+
     '</div>'+
     '<div style="border-top:1px solid var(--brd-g);margin:16px 0 12px"></div>'+
-    '<div style="font-size:13px;color:var(--txt-b);margin-bottom:10px">Сохранение</div>'+
-    '<div style="display:flex;gap:8px">'+
-    '<button onclick="closeM();exportSave()" style="flex:1;background:linear-gradient(180deg,rgba(200,169,110,.15),rgba(200,169,110,.05));border:1px solid var(--gold-d);color:var(--gold);font-size:12px;font-family:\'Cinzel\',serif;padding:7px;cursor:pointer;clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%)">📤 ЭКСПОРТ</button>'+
-    '<button onclick="closeM();importSave()" style="flex:1;background:linear-gradient(180deg,rgba(100,120,160,.15),rgba(100,120,160,.05));border:1px solid #445;color:#99aacc;font-size:12px;font-family:\'Cinzel\',serif;padding:7px;cursor:pointer;clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%)">📥 ИМПОРТ</button>'+
-    '</div>');
+    '<div style="font-size:13px;color:#cc4444;margin-bottom:8px">⚠ ОПАСНО</div>'+
+    '<button onclick="closeM();confirmReset()" style="width:100%;background:linear-gradient(180deg,rgba(160,40,40,.25),rgba(160,40,40,.05));border:1px solid #663333;color:#cc6666;font-size:12px;font-family:\'Cinzel\',serif;padding:7px;cursor:pointer;clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%)">💀 НАЧАТЬ ЗАНОВО</button>');
   const sl=document.getElementById('font-slider');
   const lb=document.getElementById('font-slider-label');
   if(sl){sl.addEventListener('input',()=>{
