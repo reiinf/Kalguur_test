@@ -222,7 +222,7 @@ function openSlotPick(ownerId,slot,isWorker){
     }).join('');
   }
   html+='</div>';
-  openM('Выбрать: '+slotNm(slot,14)+'<button class="btn btn-sm btn-r" id="btn-close-m" style="float:right;padding:2px 7px;font-size:14px;margin:-2px -4px 0 8px">✕</button>',html);
+  openM('Выбрать: '+slotNm(slot,14)+'<button class="btn btn-sm btn-r" data-back-eq="'+ownerId+'" data-back-isw="'+(isWorker?1:0)+'" style="float:right;padding:2px 7px;font-size:14px;margin:-2px -4px 0 8px">← Назад</button>',html);
 }
 function doEquip(ownerId,slot,itemId,isWorker){
   const item=G.inv.find(x=>x.id===itemId);if(!item)return;
