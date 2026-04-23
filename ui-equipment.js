@@ -81,7 +81,7 @@ function workerBestInSlot(id){
   let changed=0;
   SLOTS.forEach(sl=>{
     if(sl==='cluster')return; // кластер только для ГГ
-    const candidates=G.inv.filter(x=>x.slot===sl&&x.quality!=='unique');
+    const candidates=G.inv.filter(x=>x.slot===sl);
     if(!candidates.length)return;
     const cur=w.eq[sl];
     const curVal=cur?(iDmg(cur,w.cls)+iSurv(cur,w.cls)):0;
@@ -176,33 +176,53 @@ function openSlotPick(ownerId,slot,isWorker){
   const cls=isWorker?(G.workers.find(x=>x.id===ownerId)||{cls:'warrior'}).cls:(G.selfCls||'warrior');
   const owner=isWorker?G.workers.find(x=>x.id===ownerId):null;
   const cur=isWorker?(owner?owner.eq[slot]:null):G.selfEq[slot];
-  const slotFilter=slot==='weapon2'?'weapon':slot==='cluster2'?'cluster':slot;const compat=G.inv.filter(it=>it.slot===slotFilter);
-  let html='';
+  const slotFilter=slot==='weapon2'?'weapon':slot==='cluster2'?'cluster':slot;
+  const _isCluSlot=slotFilter==='cluster';
+  const compat=G.inv.filter(it=>it.slot===slotFilter);
+  // Сортировка по убыванию силы (только для не-кластерных слотов)
+  if(!_isCluSlot)compat.sort((a,b)=>(iDmg(b,cls)+iSurv(b,cls))-(iDmg(a,cls)+iSurv(a,cls)));
+  let html='<div>';
   if(cur){
     html+='<div class="srow" style="border-color:'+qcol(cur.quality)+'44;margin-bottom:6px">'+
       itemIcon(cur.em,22)+
       '<div class="si"><div style="color:'+qcol(cur.quality)+';font-size:16px">'+cur.name+'</div>'+
-      '<div style="font-size:14px;color:var(--txt-d)">⚔️'+iDmg(cur,cls)+' 🛡'+iSurv(cur,cls)+' · '+cur.sellPrice+gi(16)+'</div></div>'+
+      (_isCluSlot
+        ?'<div style="font-size:14px;color:#cc88ff">'+(cur.mods||[]).map(m=>{const _cs=CLUSTER_STATS.find(x=>x.stat===m.stat);return '+'+m.value+'% '+(_cs?_cs.nm:'?');}).join(' · ')+'</div>'
+        :'<div style="font-size:14px;color:var(--txt-d)">⚔️'+iDmg(cur,cls)+' 🛡'+iSurv(cur,cls)+' · '+cur.sellPrice+gi(16)+'</div>')+
+      '</div>'+
       '<button class="btn btn-sm btn-r" data-uneq-slot="'+slot+'" data-uneq-owner="'+ownerId+'" data-uneq-isw="'+(isWorker?1:0)+'">Снять</button></div>';
   }
   if(!compat.length){html+='<div class="dim" style="padding:8px;font-style:italic">Нет подходящих предметов</div>';}
   else{
     html+=compat.map(it=>{
-      const _isClu=it.slot==='cluster';const dv=_isClu?0:iDmg(it,cls),sv=_isClu?0:iSurv(it,cls),cd=(!_isClu&&cur)?iDmg(cur,cls):0,cs=(!_isClu&&cur)?iSurv(cur,cls):0;
+      const dv=_isCluSlot?0:iDmg(it,cls),sv=_isCluSlot?0:iSurv(it,cls),cd=(!_isCluSlot&&cur)?iDmg(cur,cls):0,cs=(!_isCluSlot&&cur)?iSurv(cur,cls):0;
       const dd=dv-cd,ds=sv-cs;
       const dds=dd>0?'<span style="color:var(--grn)">+'+dd+'</span>':dd<0?'<span style="color:var(--red)">'+dd+'</span>':'<span class="dim">±0</span>';
       const dss=ds>0?'<span style="color:var(--grn)">+'+ds+'</span>':ds<0?'<span style="color:var(--red)">'+ds+'</span>':'<span class="dim">±0</span>';
       const co=qcol(it.quality);
+      let cluLine='';
+      if(_isCluSlot){
+        // Показываем моды с дельтой относительно надетого кластерника
+        const curMods={};
+        if(cur)(cur.mods||[]).forEach(m=>{curMods[m.stat]=(curMods[m.stat]||0)+m.value;});
+        cluLine='<div style="font-size:14px;color:#cc88ff">'+(it.mods||[]).map(m=>{
+          const _cs=CLUSTER_STATS.find(x=>x.stat===m.stat);const nm=_cs?_cs.nm:'?';
+          const prev=curMods[m.stat]||0;const delta=m.value-prev;
+          const dcol=delta>0?'var(--grn)':delta<0?'var(--red)':'#cc88ff';
+          const dsign=delta>0?'+':delta<0?'':'';
+          return '+'+m.value+'% '+nm+(cur?(' <span style="color:'+dcol+';font-size:12px">('+dsign+delta+'%)</span>'):'');
+        }).join(' · ')+'</div>';
+      }
       return '<div class="srow" style="cursor:pointer;border-color:'+co+'33" '+
         'data-equip-item="'+it.id+'" data-equip-slot="'+slot+'" data-equip-owner="'+ownerId+'" data-equip-isw="'+(isWorker?1:0)+'" data-tip="'+it.id+'">'+
         itemIcon(it.em,22)+
         '<div class="si"><div style="color:'+co+';font-size:16px">'+it.name+'</div>'+
-        (_isClu?'<div style="font-size:14px;color:#cc88ff">'+(it.mods||[]).map(m=>{const _cs=CLUSTER_STATS.find(x=>x.stat===m.stat);return '+'+m.value+'% '+(_cs?_cs.nm:'?');}).join(' · ')+'</div>':'<div style="font-size:14px;color:var(--txt-d)">⚔️'+dv+'('+dds+') 🛡'+sv+'('+dss+') · '+it.sellPrice+gi(16)+'</div>')+'</div>'+
+        (_isCluSlot?cluLine:'<div style="font-size:14px;color:var(--txt-d)">⚔️'+dv+'('+dds+') 🛡'+sv+'('+dss+') · '+it.sellPrice+gi(16)+'</div>')+'</div>'+
         '<button class="btn btn-sm">Надеть</button></div>';
     }).join('');
   }
-  html+='<div style="margin-top:7px"><button class="btn btn-sm btn-r" data-back-eq="'+ownerId+'" data-back-isw="'+(isWorker?1:0)+'">← Назад</button></div>';
-  openM('Выбрать: '+slotNm(slot,14),html);
+  html+='</div>';
+  openM('Выбрать: '+slotNm(slot,14)+'<button class="btn btn-sm btn-r" id="btn-close-m" style="float:right;padding:2px 7px;font-size:14px;margin:-2px -4px 0 8px">✕</button>',html);
 }
 function doEquip(ownerId,slot,itemId,isWorker){
   const item=G.inv.find(x=>x.id===itemId);if(!item)return;

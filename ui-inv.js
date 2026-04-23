@@ -7,17 +7,52 @@ function renderInv(){
   const ns=G.inv.filter(x=>x.quality==='normal');
   const ms=G.inv.filter(x=>x.quality==='magic');
   const rs=G.inv.filter(x=>x.quality==='rare');
-  const hasSell=ns.length||ms.length||rs.length;
+  const us=G.inv.filter(x=>x.quality==='unique');
+  const hasSell=ns.length||ms.length||rs.length||us.length;
   let html=hasSell?'<div style="display:flex;gap:4px;margin-bottom:6px;flex-wrap:wrap">':'';
   if(ns.length)html+='<button class="btn btn-sm" style="flex:1;min-width:80px;border-color:var(--brd);color:var(--txt)" id="btn-sell-all">Обычные: '+ns.length+' шт – '+ns.reduce((s,x)=>s+(parseInt(x.sellPrice)||0),0)+gi(16)+'</button>';
   if(ms.length)html+='<button class="btn btn-sm btn-p" style="flex:1;min-width:80px" id="btn-sell-magic">Волшебные: '+ms.length+' шт – '+ms.reduce((s,x)=>s+(parseInt(x.sellPrice)||0),0)+gi(16)+'</button>';
   if(rs.length)html+='<button class="btn btn-sm" style="flex:1;min-width:80px;border-color:var(--gold);color:var(--gold)" id="btn-sell-rare">Редкие: '+rs.length+' шт – '+rs.reduce((s,x)=>s+(parseInt(x.sellPrice)||0),0)+gi(16)+'</button>';
+  if(us.length)html+='<button class="btn btn-sm" style="flex:1;min-width:80px;border-color:#e87020;color:#e87020;position:relative;overflow:hidden;user-select:none" id="btn-sell-unique">💠 Уники: '+us.length+' шт – '+us.reduce((s,x)=>s+(parseInt(x.sellPrice)||0),0)+gi(16)+'<span id="btn-sell-unique-bar" style="position:absolute;left:0;top:0;height:100%;width:0%;background:#e8702044;transition:none;pointer-events:none"></span></button>';
   if(hasSell)html+='</div>';
   html+='<div class="igrid">'+
     G.inv.map(it=>'<div class="iico '+it.quality[0]+'" style="border-color:'+qcol(it.quality)+'77" data-iid="'+it.id+'" data-tip="'+it.id+'">'+itemIcon(it.em,'full')+
       '<span class="isp" style="font-size:13px;color:'+qcol(it.quality)+'">'+it.sellPrice+gi(16)+'</span></div>').join('')+
     '</div>';
   el.innerHTML=html;updateRes();
+  // Кнопка продажи уников: зажать 1.5с для подтверждения
+  const _uBtn=document.getElementById('btn-sell-unique');
+  if(_uBtn){
+    let _uTimer=null,_uStart=0;
+    const _uBar=document.getElementById('btn-sell-unique-bar');
+    const _uDur=1500;
+    const _uCancel=()=>{
+      if(_uTimer){cancelAnimationFrame(_uTimer);_uTimer=null;}
+      if(_uBar){_uBar.style.transition='none';_uBar.style.width='0%';}
+    };
+    const _uTick=()=>{
+      const pct=Math.min(100,(Date.now()-_uStart)/_uDur*100);
+      if(_uBar)_uBar.style.width=pct+'%';
+      if(pct>=100){
+        _uTimer=null;
+        const us2=G.inv.filter(x=>x.quality==='unique');
+        if(!us2.length){showN('Нет уников!');return;}
+        const tot=us2.reduce((s,x)=>s+(parseInt(x.sellPrice)||0),0);
+        G.inv=G.inv.filter(x=>x.quality!=='unique');
+        G.gold+=tot;G.stats.sg+=tot;G.stats.sold+=us2.length;
+        us2.forEach(it=>checkContractSell(it.quality,parseInt(it.sellPrice)||0));
+        log(gi(16)+' Продано '+us2.length+'x уников +'+tot+gi(16),'ge');floatT('+'+tot+gi(16),'#e87020');
+        checkAchs();renderInv();updateRes();
+        return;
+      }
+      _uTimer=requestAnimationFrame(_uTick);
+    };
+    _uBtn.addEventListener('mousedown',()=>{_uStart=Date.now();if(_uBar){_uBar.style.transition='none';_uBar.style.width='0%';}_uTimer=requestAnimationFrame(_uTick);});
+    _uBtn.addEventListener('mouseup',_uCancel);
+    _uBtn.addEventListener('mouseleave',_uCancel);
+    _uBtn.addEventListener('touchstart',(e)=>{e.preventDefault();_uStart=Date.now();if(_uBar){_uBar.style.width='0%';}_uTimer=requestAnimationFrame(_uTick);},{passive:false});
+    _uBtn.addEventListener('touchend',_uCancel);
+  }
 }
 
 function renderActs(){
@@ -34,4 +69,3 @@ function renderActs(){
         '<button class="btn btn-sm btn-g" id="abtn-'+a.id+'" data-act="'+a.id+'">▶ Идти</button></div>';
     }).join('');
 }
-
