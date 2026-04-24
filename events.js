@@ -184,7 +184,7 @@ document.addEventListener('click',function(e){
   const facPick=t.closest('[data-faction-pick]');
   if(facPick){confirmPrestige(facPick.dataset.factionPick);return;}
   // Shop
-  if(t.dataset.shop){buyShop(t.dataset.shop);return;}
+  if(t.dataset.shop){buyShop(t.dataset.shop,parseInt(t.dataset.qty)||1);return;}
   // Upgrades
   if(t.dataset.maraUp){
     const mid=t.dataset.maraUp;

@@ -296,7 +296,8 @@ function tryItem(md,cls,mult=1){
   if(G.stats.fi===1){setTimeout(()=>{const _w=document.getElementById('inv-btn-wrap');if(_w)_w.classList.add('inv-pulse');},50);}
   // Auto-sell (Maraketh T4)
   if((hasFaction('maraketh')||hasLegacyBonus('mara_3'))&&G.factionUnlocks.autoSellItems&&G.autoSellRules&&G.autoSellRules[it.quality]&&it.quality!=='unique'){
-    const gold=parseInt(it.sellPrice)||0;G.gold+=gold;G.inv=G.inv.filter(x=>x.id!==it.id);
+    const gold=parseInt(it.sellPrice)||0;G.gold+=gold;G.stats.sg+=gold;G.stats.sold++;G.inv=G.inv.filter(x=>x.id!==it.id);
+    checkContractSell(it.quality,gold);
     log('💸 Авто-продажа: '+it.em+' '+it.name+' +'+gold+gi(16),'ge');updateRes();
     return;
   }
@@ -597,7 +598,7 @@ function updateRunVis(md,idle,isGrd,isBoss){
     }
   }
   el.innerHTML='<div class="run-info-overlay">'+
-    '<div class="run-nm" style="color:'+col+'">'+md.em+' '+(isGrd&&md.boss?md.boss:md.nm)+'</div>'+
+    '<div class="run-nm" style="color:'+col+'">'+md.em+' '+(isGrd&&md.boss?md.boss:(()=>{const _sk=String(G.selMap||'');return _sk.startsWith('u')&&G.uniqMapData&&G.uniqMapData[_sk]?G.uniqMapData[_sk].nm:md.nm;})())+'</div>'+
     '<div class="dim" style="font-size:11px;letter-spacing:2px;margin-bottom:4px">'+(isGrd?'КАРТА СТРАЖА':isBoss?'ПОРТАЛ СОЗДАТЕЛЯ':'КАРТА ТИРА '+md.t)+'</div>'+
     '<div style="font-size:13px;color:var(--txt-d)">⏱ ~'+(()=>{const spd=G.syndRunSpeed||1.0;const dlw=G._deliriumMode?1.5:1;const t=Math.round(md.time/spd*dlw);return t;})()+(()=>{const spd2=G.syndRunSpeed||1.0;const dlw2=G._deliriumMode?1.5:1;return 'с'+(spd2>1.0?' <span style="color:#ffaa44">(×'+spd2.toFixed(1)+'⚡)</span>':'')+(dlw2>1?' <span style="color:#7799bb">(×'+dlw2.toFixed(1)+'🐢)</span>':'')+' &nbsp; ';})()+gi(16)+(goldMin(md,cost))+(goldMax(md,cost)>goldMin(md,cost)?'-'+goldMax(md,cost):'')+' + предметы</div>'+ch+
     '</div>';

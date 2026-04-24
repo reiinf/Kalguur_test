@@ -1080,10 +1080,16 @@ function resolveDelveRunGrid(node,inDark,fromCol,fromRow){
   if(Math.random()<0.35*(m.item||1)){
     const itmTier=Math.max(1,Math.min(16,Math.ceil(depth/10)));
     const it=genItem(itmTier,G.selfCls||'warrior');
-    G.inv.push(it);G.stats.fi++;
-    checkContractFind(it.quality);
-    msgs.push(it.em+' <span style="color:'+qcolLog(it.quality)+'">'+it.name+'</span>');
-    gotSomething=true;
+    if((hasFaction('maraketh')||hasLegacyBonus('mara_3'))&&G.factionUnlocks.autoSellItems&&G.autoSellRules&&G.autoSellRules[it.quality]&&it.quality!=='unique'){
+      const gold=parseInt(it.sellPrice)||0;G.gold+=gold;G.stats.sg+=gold;G.stats.sold++;
+      checkContractSell(it.quality,gold);
+      log('💸 Авто-продажа [шахта]: '+it.em+' '+it.name+' +'+gold+gi(16),'ge');updateRes();
+    }else{
+      G.inv.push(it);G.stats.fi++;
+      checkContractFind(it.quality);
+      msgs.push(it.em+' <span style="color:'+qcolLog(it.quality)+'">'+it.name+'</span>');
+      gotSomething=true;
+    }
   }
   if(Math.random()<0.40*(m.currency||1)){
     const gld=Math.round((30+depth*3)*(0.8+Math.random()*0.4));

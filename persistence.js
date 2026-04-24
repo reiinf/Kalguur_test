@@ -102,6 +102,7 @@ function save(){
     legacyPerks:G.legacyPerks||[],legacyContracts:G.legacyContracts||false,
     deliriumOrbs:G.deliriumOrbs||0,deliriumSplinters:G.deliriumSplinters||0,deliriumMaps:G.deliriumMaps||{},
     delve:G.delve||null,
+    uniqMapData:G.uniqMapData||{},
     playTime:G.playTime||0,
     _fishCaught:G._fishCaught||0,
     _deliriumMode:G._deliriumMode||false,
@@ -139,6 +140,7 @@ if(s.v&&s.v>=9){/* compatible enough */}
     if(!G._fishCaught)G._fishCaught=0;
     if(!G.delve)G.delve={depth:0,sulphite:0,sulphiteCap:5000,azurite:0,upgrades:{armor:0,blast:0,speed:0,storage:0,pump:0,lantern:0},running:false,runDepth:0,locationType:null,grid:null};
     if(!G.delve.upgrades)G.delve.upgrades={armor:0,blast:0,speed:0,storage:0,pump:0,lantern:0};
+    if(!G.uniqMapData)G.uniqMapData={};
     // Грузим сохранённую сетку; если её нет — создаём и подтягиваем глубину
     if(!G.delve.grid){
       dvInitGrid();

@@ -39,7 +39,10 @@ function renderShop(){
     return '<div class="srow"><span style="font-size:17px">🗺</span>'+
       '<div class="si"><div class="snm">'+it.nm+'</div><div class="sds">'+desc+'</div></div>'+
       '<div style="text-align:right">'+priceHtml+
-      '<button class="btn btn-sm" style="margin-top:2px" data-shop="'+it.id+'">Купить</button></div></div>';
+      '<div style="display:flex;gap:3px;margin-top:2px;justify-content:flex-end">'+
+      '<button class="btn btn-sm" data-shop="'+it.id+'">Купить</button>'+
+      '<button class="btn btn-sm" style="padding:0 5px;font-size:11px;opacity:.8" data-shop="'+it.id+'" data-qty="10">×10</button>'+
+      '</div></div></div>';
   };
   let html='';
   // Splinter exchange at top (if T16 cleared)
@@ -81,16 +84,17 @@ function renderShop(){
     log('🔮 Куплен Орб Делириума за 5 осколков','info');updateRes();return true;}});
   document.getElementById('tab-shop').innerHTML=html;
 }
-function buyShop(id){
+function buyShop(id,qty=1){
   const it=window._shopItems.find(x=>x.id===id);if(!it)return;
   if(it.splCost!==undefined){
-    // splinter currency item — fn handles validation and logging
     it.fn();save();renderShop();updateRes();return;
   }
   const finalCost=it.isMap?mapShopCost(it.cost):it.cost;
-  if(G.gold<finalCost){showN('Мало золота!');return;}
-  G.gold-=finalCost;const _r=it.fn();
-  if(_r!==false)log('🛒 Куплено: '+it.nm,'info');
+  const totalCost=finalCost*qty;
+  if(G.gold<totalCost){showN('Мало золота!');return;}
+  G.gold-=totalCost;
+  for(let i=0;i<qty;i++){it.fn();}
+  if(qty>1)log('🛒 Куплено: '+it.nm+' ×'+qty,'info');
+  else log('🛒 Куплено: '+it.nm,'info');
   updateRes();renderMaps();renderShop();
 }
-
