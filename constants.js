@@ -171,7 +171,7 @@ const LEGACY_PERKS=[
   // Syndicate level 2: advanced package
   {id:'synd_2', fac:'syndicate', minFacXp:2, em:'⚡', nm:'Синдикат — Мастерство',
    desc:'Скорость прохождения карт +50% · стартовый Клинок Синдиката (уник, T8) в инвентаре',
-   apply:()=>{G.syndRunSpeed=Math.max(G.syndRunSpeed||1.0,1.5);if(!G.inv.find(x=>x.name==='Клинок Синдиката')&&!(G.selfEq&&Object.values(G.selfEq).find(x=>x&&x.name==='Клинок Синдиката'))){const wu={id:++G.iid,name:'Клинок Синдиката',em:'🗡️',slot:'weapon',cls:'warrior',quality:'unique',tier:8,mods:[{stat:'dmgPhys',value:22},{stat:'critChance',value:12}],sellPrice:25};G.inv.push(wu);}}},
+   apply:()=>{G.syndRunSpeed=Math.max(G.syndRunSpeed||1.0,1.5);if(!G.syndBladeGiven&&!G.inv.find(x=>x.name==='Клинок Синдиката')&&!(G.selfEq&&Object.values(G.selfEq).find(x=>x&&x.name==='Клинок Синдиката'))){const wu={id:++G.iid,name:'Клинок Синдиката',em:'🗡️',slot:'weapon',cls:'warrior',quality:'unique',tier:8,mods:[{stat:'dmgPhys',value:22},{stat:'critChance',value:12}],sellPrice:25};G.inv.push(wu);G.syndBladeGiven=true;}}},
   // Maraketh level 1: expedition package
   {id:'mara_1', fac:'maraketh',  minFacXp:1, em:'🏕️', nm:'Маракеты — Экспедиции',
    desc:'Автоэкспедиция · долгий поход (до 5 карт за раз)',

@@ -27,7 +27,7 @@ function freshG(){
     delve:{depth:0,sulphite:0,sulphiteCap:5000,azurite:0,
       upgrades:{armor:0,blast:0,speed:0,storage:0,pump:0,lantern:0},
       running:false,runDepth:0,locationType:null,grid:null},
-    playTime:0};
+    playTime:0,syndBladeGiven:false};
 }
 
 let G = freshG();

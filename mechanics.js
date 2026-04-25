@@ -530,7 +530,8 @@ function completeSelfRun(){
       }
     }
     addXPSelf(xpAmt(tier));
-    checkAchs();renderAtlasBar();renderShop();updateDeliriumTab();renderDelirium();renderDelve();applyUnlocks();
+    checkAchs();renderAtlasBar();applyUnlocks();
+    setTimeout(()=>{renderShop();updateDeliriumTab();renderDelirium();renderDelve();},0);
   }else{
     if(isBoss){
       G.bossTriesLeft=Math.max(0,(G.bossTriesLeft||0)-1);
@@ -546,7 +547,8 @@ function completeSelfRun(){
   }
   const isBossCard=G.selMap&&String(G.selMap).startsWith('boss_');
   if(G.selMap&&!isBossCard){const selMd=getMd(G.selMap);const _sg=String(G.selMap);updateRunVis(selMd,true,_sg.startsWith('grd_'),_sg.startsWith('boss_'));}else updateRunVis(null);
-  renderMaps();renderInv();renderUpgrades();renderWorkers();updateDeliriumTab();renderDelve();updateRes();
+  renderMaps();updateRes();
+  setTimeout(()=>{renderInv();renderUpgrades();renderWorkers();updateDeliriumTab();renderDelve();},0);
 }
 function updateRunVis(md,idle,isGrd,isBoss){
   const el=document.getElementById('run-con');if(!el)return;
@@ -657,6 +659,7 @@ function completeAct(){
 function sendWorker(id){
   if(!canWorkerMapRun()){showN('Маракеты: работники только в экспедиции!');return;}
   if(!G.selMap){showN('Выберите карту!');return;}
+  if(G._deliriumMode&&(G.deliriumSplinters||0)<5){showN('💀 Нужно минимум 5 осколков для карты в делириуме!','red');return;}
   const w=G.workers.find(x=>x.id===id);if(!w||w.status!=='idle')return;
   const running=G.workers.filter(x=>x.status==='running'||x.status==='exp').length;
   const maxS=1+G.ups.slots;
@@ -686,6 +689,7 @@ function resolveWorker(w,md){
   if(!G.stats.tierRuns)G.stats.tierRuns={};
   G.stats.tierRuns[md.t]=(G.stats.tierRuns[md.t]||0)+1;
   if(!ok){
+    if(G._deliriumMode){G.deliriumSplinters=Math.max(0,(G.deliriumSplinters||0)-5);if(G.deliriumSplinters<=0){log('💀 Осколки иссякли — карты заблокированы!','ev');showN('💀 Осколки кончились — нужно 5 для продолжения','red');}else{showN('💀 '+w.name+' провалил карту! -5 осколков','red');}}
     if((hasFaction('maraketh')||hasLegacyBonus('mara_3'))&&G.factionUnlocks.guardedWorkers){w.status='idle';log('🛡 '+w.name+' защищён — охрана отбила угрозу!','info');}
     else if(Math.random()<.3){w.status='captured';w.capturedAt=G.gt;G.stats.cap++;log('⛓️ '+w.name+' захвачен на T'+w.curMap+'!','ev');showN(w.name+' захвачен!','red');return;}
     else{w.status='injured';w.injuredAt=G.gt;G.stats.inj++;log('💔 '+w.name+' ранен на T'+w.curMap+'!','ev');}
@@ -1216,10 +1220,11 @@ function applyFactionStart(){
     G.syndRunSpeed=_syndLvls.some(l=>l.xp<=xp&&l.reward&&l.reward.runSpeed)?1.50:1.0;
     // Level 2 reward: start uniq weapon
     if(xp>=2){
-      if(!G.inv.find(x=>x.name==='Клинок Синдиката')&&!(G.selfEq&&Object.values(G.selfEq).find(x=>x&&x.name==='Клинок Синдиката'))){
+      if(!G.syndBladeGiven&&!G.inv.find(x=>x.name==='Клинок Синдиката')&&!(G.selfEq&&Object.values(G.selfEq).find(x=>x&&x.name==='Клинок Синдиката'))){
         const wu={id:++G.iid,name:'Клинок Синдиката',em:'🗡️',slot:'weapon',cls:'warrior',quality:'unique',tier:8,
           mods:[{stat:'dmgPhys',value:22},{stat:'critChance',value:12}],sellPrice:25};
         G.inv.push(wu);
+        G.syndBladeGiven=true;
       }
     }
   }
