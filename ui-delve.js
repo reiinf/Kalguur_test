@@ -28,8 +28,8 @@ function getDelWave(n){
 
 // ── DELVE ──────────────────────────────────────────────────────────────────
 const DELVE_UPGRADES=[
-  {id:'armor',  nm:'Броня вагонетки',    em:'🛡️', desc:'Снижает урон по персонажу в шахте',  effect:'-5% получаемого урона за уровень'},
-  {id:'blast',  nm:'Подрыв породы',      em:'💥', desc:'Ослабляет противников в шахте',       effect:'-4% здоровья противников за уровень'},
+  {id:'armor',  nm:'Броня вагонетки',    em:'🛡️', desc:'Повышает эффективность выживаемости в шахте',  effect:'+1% к выживаемости в шахте за уровень'},
+  {id:'blast',  nm:'Подрыв породы',      em:'💥', desc:'Ослабляет породу, усиливая эффективность урона', effect:'+1% к урону в шахте за уровень'},
   {id:'speed',  nm:'Скорость вагонетки', em:'⚡', desc:'Ускоряет спуск',                      effect:'-3% времени забега за уровень'},
   {id:'storage',nm:'Хранилище',          em:'🪣', desc:'Увеличивает запас Сульфита',           effect:'+500 к запасу за уровень'},
   {id:'pump',   nm:'Насос Сульфита',     em:'⛽', desc:'Больше Сульфита с карт',              effect:'+5% Сульфита с карт за уровень'},
@@ -42,11 +42,18 @@ const DELVE_LOCATIONS=[
   {id:'dark',     nm:'Тёмный ход',         em:'🌑', mods:{currency:2, azurite:0.5}},
   {id:'sulphite', nm:'Сульфитовая жила',   em:'⛽', mods:{sulphite:4, item:0.5, currency:0.5, azurite:0.5}},
 ];
+// dgr для тиров выше T16 — экспоненциальный рост ×1.12 за тир
+function dgrForTier(t){
+  if(t<=16)return MAP_TIERS[Math.max(0,t-1)].dgr;
+  let dgr=725;
+  for(let i=17;i<=t;i++)dgr=Math.round(dgr*1.12);
+  return dgr;
+}
 // Стоимость одного спуска на глубину d
 function delveCost(d){
   // Стоимость ≈ 2 карты соответствующего тира сложности
   const t=Math.max(1,Math.min(16,Math.ceil(d/10)));
-  return 55+t*20;
+  return 33+t*12;
 }
 // Время одного забега в шахте (мс), учитывает апгрейд скорости
 function delveRunTime(){
@@ -890,13 +897,12 @@ function dvUpdateInfoBar(){
   const sel=g.selectedKey?g.nodes[g.selectedKey]:null;
   const rowDiff=sel?Math.max(0,sel.row-g.playerRow):1;
   const colDiff=sel?Math.abs(sel.col-g.playerCol):0;
-  const cost=sel?delveCost(dv.depth+rowDiff*5+colDiff*3):delveCost(dv.depth+5);
+  const cost=sel?delveCost(dv.depth+rowDiff*3+colDiff*3):delveCost(dv.depth+3);
   const inDark=sel&&dvNodeDist(g.selectedKey)>dvLanternRadius();
-  const effTier=Math.max(1,Math.min(16,Math.ceil((dv.depth+rowDiff*5)/10)))+(inDark?2:0);
-  const _power=sDmg()+sSurv();
-  const armorB=(dv.upgrades.armor||0)*0.05;
-  const blastB=(dv.upgrades.blast||0)*0.04;
-  const ch=Math.max(0.03,Math.min(0.97,calcCh(_power,effTier)+armorB+blastB));
+  const effTier=Math.max(1,Math.ceil((dv.depth+rowDiff*3)/10))+(inDark?2:0);
+  const _effDmg=sDmg()*(1+(dv.upgrades.blast||0)*0.01);
+  const _effSurv=sSurv()*(1+(dv.upgrades.armor||0)*0.01);
+  const ch=Math.max(0.03,Math.min(0.97,calcCh(_effDmg+_effSurv,16,dgrForTier(effTier))));
   const chCol=chcol(ch);
   const loc=sel?DELVE_LOCATIONS.find(l=>l.id===sel.type):null;
   const sulOk=dv.sulphite>=cost;
@@ -983,14 +989,14 @@ function dvGo(){
 
   const rowDiff=Math.max(0,target.row-g.playerRow);
   const colDiff=Math.abs(target.col-g.playerCol);
-  const cost=delveCost(dv.depth+rowDiff*5+colDiff*3);
+  const cost=delveCost(dv.depth+rowDiff*3+colDiff*3);
   if(dv.sulphite<cost){showN('Недостаточно Сульфита! Нужно '+cost,'red');return;}
 
   dv.sulphite-=cost;
   dv.running=true;
   const inDarkFinal=dvNodeDist(g.selectedKey)>dvLanternRadius();
 
-  log('⛏️ Спуск ['+(inDarkFinal?'⚠ тьма':'')+(DELVE_LOCATIONS.find(l=>l.id===target.type)||{nm:''}).nm+'] гл.'+(target.row*5),'info');
+  log('⛏️ Спуск ['+(inDarkFinal?'⚠ тьма':'')+(DELVE_LOCATIONS.find(l=>l.id===target.type)||{nm:''}).nm+'] гл.'+(target.row*3),'info');
 
   const wasVisited=target.visited;
   const fromKey=dvKey(g.playerCol,g.playerRow);
@@ -1004,7 +1010,7 @@ function dvGo(){
     // При bridge/rand прыжке прямого ребра нет — добавляем его чтобы goldLine работала
     if(isBridgeJump) dvAddEdge(g,fromKey,toKey);
     g.selectedKey=null;
-    dv.depth=Math.max(dv.depth,target.row*5);
+    dv.depth=Math.max(dv.depth,target.row*3);
     dv.running=false;
 
     // Плавная камера — вертикальная и горизонтальная
@@ -1058,17 +1064,16 @@ function resolveDelveRunGrid(node,inDark,fromCol,fromRow){
   const loc=DELVE_LOCATIONS.find(l=>l.id===node.type)||DELVE_LOCATIONS[0];
   const m=loc.mods||{};
 
-  const effTier=Math.max(1,Math.min(16,Math.ceil(depth/10)))+(inDark?2:0);
-  const _power=sDmg()+sSurv();
-  const armorB=(dv.upgrades.armor||0)*0.05;
-  const blastB=(dv.upgrades.blast||0)*0.04;
-  const ch=Math.max(0.03,Math.min(0.97,calcCh(_power,effTier)+armorB+blastB));
+  const effTier=Math.max(1,Math.ceil(depth/10))+(inDark?2:0);
+  const _effDmg=sDmg()*(1+(dv.upgrades.blast||0)*0.01);
+  const _effSurv=sSurv()*(1+(dv.upgrades.armor||0)*0.01);
+  const ch=Math.max(0.03,Math.min(0.97,calcCh(_effDmg+_effSurv,16,dgrForTier(effTier))));
 
   if(Math.random()>ch){
     log('💀 Погибли в шахте на глубине '+depth+'!','ev');
     floatT('💀 шахта','#ff4444');
     dvFlashResult(['<span style="color:#ff4444">💀 Погибли на глубине '+depth+'</span>']);
-    if(fromCol!==undefined){const g=G.delve.grid;g.playerCol=fromCol;g.playerRow=fromRow;dv.depth=Math.max(0,(fromRow-1)*5);_dv.camTarget=fromRow;_dv.camColTarget=fromCol;if(!_dv._raf)_dv._raf=requestAnimationFrame(_dvAnimFrame);}
+    if(fromCol!==undefined){const g=G.delve.grid;g.playerCol=fromCol;g.playerRow=fromRow;dv.depth=Math.max(0,(fromRow-1)*3);_dv.camTarget=fromRow;_dv.camColTarget=fromCol;if(!_dv._raf)_dv._raf=requestAnimationFrame(_dvAnimFrame);}
     dvDeathEffect();
     dvRender();
     return;
@@ -1078,7 +1083,7 @@ function resolveDelveRunGrid(node,inDark,fromCol,fromRow){
   const msgs=[];let gotSomething=false;
 
   if(Math.random()<0.35*(m.item||1)){
-    const itmTier=Math.max(1,Math.min(16,Math.ceil(depth/10)));
+    const itmTier=16+Math.floor(Math.max(0,depth-160)/50);
     const it=genItem(itmTier,G.selfCls||'warrior');
     if((hasFaction('maraketh')||hasLegacyBonus('mara_3'))&&G.factionUnlocks.autoSellItems&&G.autoSellRules&&G.autoSellRules[it.quality]&&it.quality!=='unique'){
       const gold=parseInt(it.sellPrice)||0;G.gold+=gold;G.stats.sg+=gold;G.stats.sold++;
@@ -1111,7 +1116,7 @@ function resolveDelveRunGrid(node,inDark,fromCol,fromRow){
 
   log('⛏️ Гл.'+depth+' ['+loc.nm+']: '+msgs.join(', '),'ge');
   floatT('⛏️ находка','#88ccff');
-  addXPSelf(xpAmt(Math.max(1,Math.min(16,Math.ceil(depth/10)))));
+  addXPSelf(xpAmt(Math.max(1,Math.ceil(depth/10))));
   // Ачивки за шахту — только при реальном прохождении узла
   grantAch('delve_enter');
   if(dv.depth>=100)grantAch('delve_d100');
@@ -1128,7 +1133,9 @@ function renderDelve(){
   const el=document.getElementById('delve-area');if(!el)return;
   const dv=G.delve;
 
-  if(!dv.grid||Object.keys(dv.grid.nodes).length===0)dvInitGrid();
+  if(!dv.grid||Object.keys(dv.grid.nodes).length===0){
+    if(dv.depth>0)dvRegenGrid(true); else dvInitGrid();
+  }
   dvEnsureGenerated();
 
   // Режим: 'info'=сведения, 'map'=шахта стандарт, 'big'=большой без шапки
@@ -1212,7 +1219,7 @@ function _dvAttachCanvas(dv){
   },50);
 }
 
-function dvRegenGrid(){
+function dvRegenGrid(skipRender=false){
   const dv=G.delve;
   const savedDepth=dv.depth||0;
   // Сбрасываем состояние анимации перед пересозданием
@@ -1223,7 +1230,7 @@ function dvRegenGrid(){
   // dvInitGrid генерирует строки 0..DV_ROWS_AHEAD
   // Сразу ставим игрока и камеру на нужную глубину ДО генерации
   if(savedDepth>0){
-    const targetRow=Math.ceil(savedDepth/5);
+    const targetRow=Math.ceil(savedDepth/3);
     // Создаём чистую сетку сразу с правильными параметрами
     dv.grid={
       nodes:{},edges:[],
@@ -1234,7 +1241,7 @@ function dvRegenGrid(){
       _genVer:'378h',_mainCols:null
     };
     const g=dv.grid;
-    dv.depth=targetRow*5;
+    dv.depth=targetRow*3;
     dvGenChunk(g,targetRow,targetRow+DV_ROWS_AHEAD);
     // Ставим игрока на реальный узел
     let placed=false;
@@ -1246,16 +1253,16 @@ function dvRegenGrid(){
         }
       }
     }
-    dv.depth=g.playerRow*5;
+    dv.depth=g.playerRow*3;
     g.cameraRow=g.playerRow;g.cameraCol=g.playerCol;
     dvEnsureGenerated();
   } else {
     dvInitGrid();
   }
-  renderDelve();
+  if(!skipRender){renderDelve();}
   save();
   log('🔄 Шахта пересоздана','info');
-  showN('Шахта пересоздана','ge');
+  if(!skipRender){showN('Шахта пересоздана','ge');}
 }
 
 function dvEvacuate(){

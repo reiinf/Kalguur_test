@@ -141,15 +141,35 @@ if(s.v&&s.v>=9){/* compatible enough */}
     if(!G.delve)G.delve={depth:0,sulphite:0,sulphiteCap:5000,azurite:0,upgrades:{armor:0,blast:0,speed:0,storage:0,pump:0,lantern:0},running:false,runDepth:0,locationType:null,grid:null};
     if(!G.delve.upgrades)G.delve.upgrades={armor:0,blast:0,speed:0,storage:0,pump:0,lantern:0};
     if(!G.uniqMapData)G.uniqMapData={};
+    // Защита сохранений: если шанс прохождения < 30% — откатить depth до безопасного (~40%)
+    if(G.delve&&G.delve.depth>0){
+      const _dv=G.delve;
+      const _effDmg=sDmg()*(1+(_dv.upgrades.blast||0)*0.01);
+      const _effSurv=sSurv()*(1+(_dv.upgrades.armor||0)*0.01);
+      const _effPower=_effDmg+_effSurv;
+      const _curT=Math.max(1,Math.ceil(_dv.depth/10));
+      const _curCh=calcCh(_effPower,16,dgrForTier(_curT));
+      if(_curCh<0.30){
+        let _safeDepth=_dv.depth;
+        while(_safeDepth>0){
+          const _t=Math.max(1,Math.ceil(_safeDepth/10));
+          const _ch=calcCh(_effPower,16,dgrForTier(_t));
+          if(_ch>=0.40)break;
+          _safeDepth-=10;
+        }
+        _dv.depth=_safeDepth;
+        _dv.grid=null;
+        log('⚠ Баланс шахты изменился — глубина скорректирована до '+_safeDepth,'info');
+      }
+    }
     // Грузим сохранённую сетку; если её нет — откладываем генерацию на после первого рендера
     if(!G.delve.grid){
       setTimeout(()=>{
         if(!G.delve.grid){
-          dvInitGrid();
           const _clearedTiers=Object.keys(G.cleared||{}).map(Number).filter(n=>G.cleared[n]);
           const _maxCleared=_clearedTiers.length?Math.max(..._clearedTiers):0;
           if(_maxCleared>0)dvUpdateMinDepth(_maxCleared);
-          if(typeof renderDelve==='function')renderDelve();
+          if(typeof renderDelve==='function')renderDelve(); // renderDelve сам вызовет dvRegenGrid или dvInitGrid
         }
       },0);
     }
