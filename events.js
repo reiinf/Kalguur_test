@@ -204,7 +204,7 @@ document.addEventListener('click',function(e){
     const maxes={slots:4,rescue:3,heal:3};const id=t.dataset.up;
     if(!costs[id])return;if(G.ups[id]>=maxes[id]){showN('Максимум!');return;}
     const cost=costs[id]();if(G.gold<cost){showN('Мало золота!');return;}
-    G.gold-=cost;G.ups[id]++;log('⚙ '+id+' → Ур.'+G.ups[id],'info');updateRes();renderUpgrades();return;
+    G.gold-=cost;G.ups[id]++;log('⚙ '+id+' → Ур.'+G.ups[id],'info');updateRes();renderUpgrades();renderWorkers();return;
   }
   // Workers
   const sendEl=t.dataset.send?t:cl('[data-send]');if(sendEl&&sendEl.dataset.send){sendWorker(parseInt(sendEl.dataset.send));return;}

@@ -490,7 +490,7 @@ function completeSelfRun(){
         eater:[
           {nm:'Семя Пустоты',       em:'🌑',slot:'weapon',mods:[{stat:'minionDmg',value:320},{stat:'dmgSpell',value:240},{stat:'int',value:110},{stat:'energyShield',value:160}]},
           {nm:'Пожирающий Осколок', em:'💀',slot:'weapon',mods:[{stat:'dmgPhys',value:260},{stat:'critChance',value:50},{stat:'allRes',value:55},{stat:'str',value:85}]},
-          {nm:'Щит Пожирателя',     em:'🔵',slot:'armor', mods:[{stat:'energyShield',value:380},{stat:'hp',value:260},{stat:'allRes',value:80},{stat:'int',value:100}]},
+          {nm:'Щит Пожирателя',     em:'🛡️',slot:'armor', mods:[{stat:'energyShield',value:380},{stat:'hp',value:260},{stat:'allRes',value:80},{stat:'int',value:100}]},
           {nm:'Кольцо Пустоты',     em:'💍',slot:'ring',  mods:[{stat:'allRes',value:85},{stat:'int',value:90},{stat:'dmgSpell',value:150},{stat:'critSpell',value:48}]},
         ],
       };
@@ -859,7 +859,7 @@ function tryBoss(id){
       eater:[
         {nm:'Семя Пустоты',       em:'🌑',slot:'weapon',mods:[{stat:'minionDmg',value:320},{stat:'dmgSpell',value:240},{stat:'int',value:110},{stat:'energyShield',value:160}]},
         {nm:'Пожирающий Осколок', em:'💀',slot:'weapon',mods:[{stat:'dmgPhys',value:260},{stat:'critChance',value:50},{stat:'allRes',value:55},{stat:'str',value:85}]},
-        {nm:'Щит Пожирателя',     em:'🔵',slot:'armor', mods:[{stat:'energyShield',value:380},{stat:'hp',value:260},{stat:'allRes',value:80},{stat:'int',value:100}]},
+        {nm:'Щит Пожирателя',     em:'🛡️',slot:'armor', mods:[{stat:'energyShield',value:380},{stat:'hp',value:260},{stat:'allRes',value:80},{stat:'int',value:100}]},
         {nm:'Кольцо Пустоты',     em:'💍',slot:'ring',  mods:[{stat:'allRes',value:85},{stat:'int',value:90},{stat:'dmgSpell',value:150},{stat:'critSpell',value:48}]},
       ],
     };

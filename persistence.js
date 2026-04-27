@@ -98,7 +98,7 @@ function save(){
     stats:G.stats,iid:G.iid,wid:G.wid,
     maxTier:G.maxTier,cleared:G.cleared,lifetimeMaxCleared:G.lifetimeMaxCleared||0,achs:G.achs,achsPending:G.achsPending,prestige:G.prestige,prestigeBonus:G.prestigeBonus,
     guardianPieces:G.guardianPieces,faction:G.faction||'none',factionXp:G.factionXp||{},factionUnlocks:G.factionUnlocks||{},bossAttempts:G.bossAttempts,bossKills:G.bossKills,bossTriesLeft:G.bossTriesLeft||0,activeBossId:G.activeBossId||null,t16RunsSinceBoss:G.t16RunsSinceBoss||0,pendingBoss:G.pendingBoss||null,voidstones:G.voidstones||{shaper:false,exarch:false,eater:false},
-    syndRunSpeed:G.syndRunSpeed||1.0,contracts:G.contracts||[],contractRunsDone:G.contractRunsDone||0,passives:G.passives||{},passivePending:G.passivePending||0,firstRun:G.firstRun||false,unlocks:G.unlocks||{},autoExp:G.autoExp||false,autoRescue:G.autoRescue||false,autoHeal:G.autoHeal||false,autoBuyMaps:G.autoBuyMaps||false,autoSellRules:G.autoSellRules||{normal:false,magic:false,rare:false},
+    syndRunSpeed:G.syndRunSpeed||1.0,syndBladeGiven:G.syndBladeGiven||false,contracts:G.contracts||[],contractRunsDone:G.contractRunsDone||0,passives:G.passives||{},passivePending:G.passivePending||0,firstRun:G.firstRun||false,unlocks:G.unlocks||{},autoExp:G.autoExp||false,autoRescue:G.autoRescue||false,autoHeal:G.autoHeal||false,autoBuyMaps:G.autoBuyMaps||false,autoSellRules:G.autoSellRules||{normal:false,magic:false,rare:false},
     legacyPerks:G.legacyPerks||[],legacyContracts:G.legacyContracts||false,
     deliriumOrbs:G.deliriumOrbs||0,deliriumSplinters:G.deliriumSplinters||0,deliriumMaps:G.deliriumMaps||{},
     delve:G.delve||null,
@@ -137,6 +137,7 @@ if(s.v&&s.v>=9){/* compatible enough */}
     if(G.autoExp===undefined)G.autoExp=false;if(G.autoRescue===undefined)G.autoRescue=false;if(G.autoHeal===undefined)G.autoHeal=false;if(G.autoBuyMaps===undefined)G.autoBuyMaps=false;
     if(!G.legacyPerks)G.legacyPerks=[];if(G.legacyContracts===undefined)G.legacyContracts=false;
     if(!G.factionXp.legacy)G.factionXp.legacy=0;
+    if(G.syndBladeGiven===undefined)G.syndBladeGiven=false;
     if(!G._fishCaught)G._fishCaught=0;
     if(!G.delve)G.delve={depth:0,sulphite:0,sulphiteCap:5000,azurite:0,upgrades:{armor:0,blast:0,speed:0,storage:0,pump:0,lantern:0},running:false,runDepth:0,locationType:null,grid:null};
     if(!G.delve.upgrades)G.delve.upgrades={armor:0,blast:0,speed:0,storage:0,pump:0,lantern:0};
