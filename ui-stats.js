@@ -26,7 +26,7 @@ function updateStats(){
   el._lastStatsKey=_sk;
   const _fmtHM=ms=>{const m=Math.floor(ms/60000);const h=Math.floor(m/60);return h?h+'ч '+(m%60)+'м':m+'м';};
   el.innerHTML=
-    '<div>⏱ Время возвышения: <span class="gt">'+_fmtHM(G.gt)+'</span></div>'+
+    '<div>⏱ Время возвышения: <span class="gt">'+_fmtHM(G.runTime||0)+'</span></div>'+
     '<div>📅 Всего в игре: <span class="gt">'+_fmtHM(G.playTime||0)+'</span></div>'+
     '<div>'+gi(16)+' Заработано: <span class="gt">'+fN(G.stats.ge)+'</span></div>'+
     '<div>💎 Продано: <span class="gt">'+G.stats.sold+'шт ('+fN(G.stats.sg)+gi(16)+')</span></div>'+
