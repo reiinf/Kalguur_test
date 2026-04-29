@@ -38,7 +38,7 @@ function renderMaps(){
   ];
   const items=[
     ...bossCards.filter(x=>x.k==='boss_shaper'),   // 1. Создатель
-    ...bossCards.filter(x=>x.k!=='boss_shaper'),    // 2. Элдрич боссы
+    ...bossCards.filter(x=>x.k!=='boss_shaper'),    // 2. Мистические боссы
     ...grdKeys.map(k=>({t:16,k,type:'guardian'})),  // 3. Гварды
     ...uniqs.map(t=>({t,k:'u'+t,type:'uniq'})),     // 4. Уникальные
     ...cursed.map(t=>({t,k:'c'+t,type:'cursed'})),  // 5. Зараженные
@@ -61,8 +61,8 @@ function renderMaps(){
           '<div class="mtier" style="color:#cc6600;font-size:12px">'+(altReady||altHasTries?'💥':'⏳')+'</div>'+
           '<div style="flex:1;min-width:0">'+
             '<div class="mname" style="color:'+(altReady||altHasTries?'#ffaa44':'#887755')+'">'+
-              (altReady||altHasTries?((ab?ab.em+' '+ab.nm:'Элдрич Босс')+' <span style="font-size:11px;color:#ffaa44">[ПРИЗВАН]</span>'):
-              '🔥🌑 Элдрич Боссы')+
+              (altReady||altHasTries?((ab?ab.em+' '+ab.nm:'Мистический Босс')+' <span style="font-size:11px;color:#ffaa44">[ПРИЗВАН]</span>'):
+              '🔥🌑 Мистические боссы')+
             '</div>'+
             '<div class="mreward" style="font-size:11px">'+gi(16)+'2000-4000 + уникальный предмет</div>'+
             (altReady||altHasTries
