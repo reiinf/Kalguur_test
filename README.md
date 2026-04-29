@@ -1,6 +1,6 @@
 Браузерная игра в жанре Idle/менеджмент на тематику Path of Exile
 
-Контента на часа 3-4
+Контента на 7-8 часов
 
 https://reiinf.github.io/Kalguur_test/
 
