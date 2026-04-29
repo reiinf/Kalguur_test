@@ -94,7 +94,8 @@ function init(){
     const _now=performance.now();
     const _delta=_now-(window._lastPlayTimeMark||window._sessionStart);
     window._lastPlayTimeMark=_now;
-    if(_delta<10000){G.playTime=(G.playTime||0)+_delta;G.runTime=(G.runTime||0)+_delta;}
+    const _capped=Math.min(_delta,10000);
+    G.playTime=(G.playTime||0)+_capped;G.runTime=(G.runTime||0)+_capped;
   },1000);
   // Ждём загрузки WASM перед запуском тика
   window._lastTick=performance.now();
