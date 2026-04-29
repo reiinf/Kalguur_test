@@ -716,7 +716,7 @@ function resolveWorker(w,md){
 }
 
 function tryAutoExp(w){
-  if(!G.autoExp||!hasMaraFeature())return;
+  if(!w.autoExp||!hasMaraFeature())return;
   if(w.status!=='idle')return;
   const _runningNow=G.workers.filter(x=>x.status==='running'||x.status==='exp').length;
   if(_runningNow>=1+G.ups.slots)return;
@@ -761,10 +761,10 @@ function resolveExpStep(w){
       w.status='idle';w.expTiers=[];w.expIdx=0;
       log('🛡 '+w.name+' — охрана отбила угрозу! Экспедиция провалена, отряд цел.','info');
       renderWorkers();renderInv();updateRes();
-      if(G.autoExp)setTimeout(()=>tryAutoExp(w),300);
+      if(w.autoExp)setTimeout(()=>tryAutoExp(w),300);
       return;
     }
-    else if(Math.random()<.2){w.status='captured';w.capturedAt=G.gt;G.stats.cap++;log('⛓️ '+w.name+' захвачен в экспедиции T'+tier+'!','ev');showN(w.name+' захвачен!','red');if(G.autoRescue){const _rc=Math.floor((30+tier*12)*(1-G.ups.rescue*.15)*(1-passiveVal('rescueCostPct')/100));if(G.gold>=_rc){G.gold-=_rc;w.status='idle';log('🔓 Авто-выкуп '+w.name+' за '+_rc+gi(16),'info');if(G.autoExp)setTimeout(()=>tryAutoExp(w),300);}}}
+    else if(Math.random()<.2){w.status='captured';w.capturedAt=G.gt;G.stats.cap++;log('⛓️ '+w.name+' захвачен в экспедиции T'+tier+'!','ev');showN(w.name+' захвачен!','red');if(G.autoRescue){const _rc=Math.floor((30+tier*12)*(1-G.ups.rescue*.15)*(1-passiveVal('rescueCostPct')/100));if(G.gold>=_rc){G.gold-=_rc;w.status='idle';log('🔓 Авто-выкуп '+w.name+' за '+_rc+gi(16),'info');if(w.autoExp)setTimeout(()=>tryAutoExp(w),300);}}}
     else{w.status='injured';w.injuredAt=G.gt;G.stats.inj++;log('💔 '+w.name+' ранен в экспедиции!','ev');}
     w.expTiers=[];w.expIdx=0;renderWorkers();renderInv();updateRes();return;
   }
@@ -783,7 +783,7 @@ function resolveExpStep(w){
     w.status='idle';w.expTiers=[];w.expIdx=0;
     log('🎉 '+w.name+' завершил экспедицию!','info');showN(w.name+' завершил экспедицию!','pur');
     // Auto-restart expedition if enabled
-    if(G.autoExp&&hasMaraFeature())setTimeout(()=>tryAutoExp(w),200);
+    if(w.autoExp&&hasMaraFeature())setTimeout(()=>tryAutoExp(w),200);
   }
   renderWorkers();renderInv();renderDelve();updateRes();
 }

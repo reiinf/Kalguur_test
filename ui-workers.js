@@ -55,14 +55,20 @@ function renderWorkers(){
       const hasS=running<maxS;
       const maraBlock=factionRestrict('workersExpOnly');
       const disReason=maraBlock?'Только экспедиции':!hasM?'Выберите карту':!hasS?'Нужен апгрейд Машины для доп. слота':'';
-      aEl='<button class="btn btn-sm" data-send="'+w.id+'"'+((hasM&&hasS&&!maraBlock)?'':' disabled title="'+disReason+'"')+'>▶</button>';
+      const autoExpBtn=G.factionUnlocks&&G.factionUnlocks.autoExpBought
+        ?'<button class="btn btn-sm" data-toggle-autoexp="'+w.id+'" title="Авто-экспедиция" style="padding:0 6px;'+(w.autoExp?'background:#1a4a1a;border-color:#44cc44;color:#44cc44':'')+'">🔁</button>'
+        :'';
+      aEl='<button class="btn btn-sm" data-send="'+w.id+'"'+((hasM&&hasS&&!maraBlock)?'':' disabled title="'+disReason+'"')+'>▶</button>'+autoExpBtn;
     }else if(w.status==='running'){
       sEl='<span class="wst st-run">'+(w.cursed?'💜':w.uniq?'🟠':'')+'T'+w.curMap+'</span>';
       aEl='<div class="prog-bar" style="width:60px;height:4px"><div class="prog-fill" id="wp-'+w.id+'" style="width:'+(w.prog*100)+'%"></div></div>';
     }else if(w.status==='exp'){
       const et=w.expTiers&&w.expTiers[w.expIdx];
+      const autoExpBtn=G.factionUnlocks&&G.factionUnlocks.autoExpBought
+        ?'<button class="btn btn-sm" data-toggle-autoexp="'+w.id+'" title="Авто-экспедиция" style="padding:0 6px;'+(w.autoExp?'background:#1a4a1a;border-color:#44cc44;color:#44cc44':'')+'">🔁</button>'
+        :'';
       sEl='<span class="wst st-exp">ЭКС'+(et?' T'+et:'')+'</span>';
-      aEl='<div class="prog-bar" style="width:60px;height:4px"><div class="prog-fill purple" id="wp-'+w.id+'" style="width:'+(w.prog*100)+'%"></div></div>';
+      aEl='<div class="prog-bar" style="width:60px;height:4px"><div class="prog-fill purple" id="wp-'+w.id+'" style="width:'+(w.prog*100)+'%"></div></div>'+autoExpBtn;
     }else if(w.status==='captured'){
       const cost=Math.floor((30+(w.curMap||1)*12)*(1-G.ups.rescue*.15));
       sEl='<span class="wst st-cap">⛓ ПЛЕН</span>';
@@ -108,7 +114,7 @@ function renderUpgrades(){
   const _showMaraUps=hasFaction('maraketh')||hasMaraFeature();
   window._maraUps=_showMaraUps?[
     {id:'autoExp',     nm:'🔄 Автоэкспедиция', minLevel:1, cost:()=>200,
-     desc:()=>G.factionUnlocks.autoExpBought?(G.autoExp?'✅ Включено':'⏸ Выключено'):'Работники автоматически повторяют экспедиции'},
+     desc:()=>G.factionUnlocks.autoExpBought?'✅ Куплено — управляйте у каждого работника':'Работники автоматически повторяют экспедиции'},
     {id:'exp5',        nm:'🗺 Долгий поход',    minLevel:1, cost:()=>800,
      desc:()=>G.factionUnlocks.exp5?'✅ До 5 карт разблокировано':'Экспедиции расширяются до 5 карт'},
     {id:'autoRescue',  nm:gi(16)+' Авто-выкуп',      minLevel:1, cost:()=>600,
@@ -148,8 +154,8 @@ function renderUpgrades(){
         '<div class="si"><div class="snm">'+u.nm+'</div>'+
         '<div class="sds">'+((_isLegacy)?'Нужен перк Маракетов ур.'+(u.minLevel):'Уровень Маракет '+(u.minLevel))+'</div></div></div>';
     }
-      const _tog=['autoExp','autoRescue','autoHeal','autoBuyMaps'].includes(u.id);
-      const done=_tog?false:(G.factionUnlocks[u.id]||false);
+      const _tog=['autoRescue','autoHeal','autoBuyMaps'].includes(u.id);
+      const done=_tog?false:(u.id==='autoExp'?!!(G.factionUnlocks.autoExpBought):(G.factionUnlocks[u.id]||false));
       const cost=u.cost();const canAff=G.gold>=cost;
       // Special render for autoSellItems
       if(u.id==='autoSellItems'){
@@ -196,4 +202,3 @@ function renderUpgrades(){
   // Sync atlas bar prestige button
   renderAtlasBar();
 }
-

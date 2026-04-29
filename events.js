@@ -145,8 +145,7 @@ document.addEventListener('click',function(e){
   // Upgrades
   if(t.dataset.maraUp){
     const mid=t.dataset.maraUp;
-    if(mid==='autoExpToggle'){G.autoExp=!G.autoExp;renderUpgrades();save();return;}
-    if(mid==='autoExpBuy'){if(G.gold<200){showN('Недостаточно золота!');return;}G.gold-=200;G.factionUnlocks.autoExpBought=true;renderUpgrades();updateRes();save();return;}
+    if(mid==='autoExpBuy'){if(G.gold<200){showN('Недостаточно золота!');return;}G.gold-=200;G.factionUnlocks.autoExpBought=true;renderUpgrades();renderWorkers();updateRes();save();return;}
     if(mid==='autoRescue'){if(!G.factionUnlocks.autoRescueBought){if(G.gold<600){showN('Недостаточно золота!');return;}G.gold-=600;G.factionUnlocks.autoRescueBought=true;}G.autoRescue=!G.autoRescue;renderUpgrades();updateRes();save();return;}
     if(mid==='autoHeal'){if(!G.factionUnlocks.autoHealBought){if(G.gold<400){showN('Недостаточно золота!');return;}G.gold-=400;G.factionUnlocks.autoHealBought=true;}G.autoHeal=!G.autoHeal;renderUpgrades();updateRes();save();return;}
     if(mid==='autoBuyMaps'){if(!G.factionUnlocks.autoBuyMapsBought){if(G.gold<1000){showN('Недостаточно золота!');return;}G.gold-=1000;G.factionUnlocks.autoBuyMapsBought=true;}G.autoBuyMaps=!G.autoBuyMaps;renderUpgrades();updateRes();save();return;}
@@ -165,6 +164,7 @@ document.addEventListener('click',function(e){
   }
   // Workers
   const sendEl=t.dataset.send?t:cl('[data-send]');if(sendEl&&sendEl.dataset.send){sendWorker(parseInt(sendEl.dataset.send));return;}
+  const toggleAeEl=t.dataset.toggleAutoexp?t:cl('[data-toggle-autoexp]');if(toggleAeEl&&toggleAeEl.dataset.toggleAutoexp){const _wid=parseInt(toggleAeEl.dataset.toggleAutoexp);const _w=G.workers.find(x=>x.id===_wid);if(_w){_w.autoExp=!_w.autoExp;renderWorkers();save();}return;}
   const rescEl=t.dataset.rescue?t:cl('[data-rescue]');if(rescEl&&rescEl.dataset.rescue){rescueW(parseInt(rescEl.dataset.rescue));return;}
   const weqEl=t.dataset.weq?t:cl('[data-weq]');if(weqEl&&weqEl.dataset.weq){openWorkerEq(parseInt(weqEl.dataset.weq));return;}
   const bisEl=t.dataset.workerBis?t:cl('[data-worker-bis]');if(bisEl&&bisEl.dataset.workerBis){workerBestInSlot(parseInt(bisEl.dataset.workerBis));return;}
