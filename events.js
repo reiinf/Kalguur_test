@@ -89,50 +89,7 @@ document.addEventListener('click',function(e){
     ms.forEach(it=>{checkContractSell("magic",parseInt(it.sellPrice)||0);});
     checkAchs();renderInv();updateRes();return;
   }
-  if(tId==='btn-sell-rare'){
-    const rs=G.inv.filter(x=>x.quality==='rare');if(!rs.length){showN('Нет редких!');return;}
-    const tot=rs.reduce((s,x)=>s+(parseInt(x.sellPrice)||0),0);
-    openM('⚠️ Продать редкие?',
-      '<div style="font-size:15px;margin-bottom:12px">Продать <b style="color:var(--rare)">'+rs.length+'</b> редких предметов за <span class="gt">'+tot+gi(16)+'</span>?<br>'+
-      '<span style="font-size:13px;color:var(--txt-d)">Это действие необратимо!</span></div>'+
-      '<div style="display:flex;gap:6px">'+
-        '<button class="btn btn-g" id="btn-confirm-sell-rare">'+gi(16)+' Продать</button>'+
-        '<button class="btn btn-r btn-sm" id="btn-close-m">Отмена</button></div>');
-    window._pendingRareSell=rs;return;
-  }
-  if(tId==='btn-confirm-sell-rare'){
-    const rs=window._pendingRareSell||[];const tot=rs.reduce((s,x)=>s+(parseInt(x.sellPrice)||0),0);
-    const ids=new Set(rs.map(x=>x.id));G.inv=G.inv.filter(x=>!ids.has(x.id));
-    G.gold+=tot;G.stats.sg+=tot;G.stats.sold+=rs.length;
-    rs.forEach(it=>{checkContractSell("rare",parseInt(it.sellPrice)||0);});
-    log(gi(16)+' Продано '+rs.length+'x редких +'+tot+gi(16),'ge');floatT('+'+tot+gi(16),'#f0d060');
-    window._pendingRareSell=null;closeM();checkAchs();renderInv();updateRes();return;
-  }
-  if(t.id==='btn-sell-magic'){
-    const ms=G.inv.filter(x=>x.quality==='magic');if(!ms.length){showN('Нет волшебных!');return;}
-    const tot=ms.reduce((s,x)=>s+(parseInt(x.sellPrice)||0),0);G.inv=G.inv.filter(x=>x.quality!=='magic');
-    G.gold+=tot;G.stats.sg+=tot;G.stats.sold+=ms.length;
-    log(gi(16)+' Продано '+ms.length+'x волшебных +'+tot+gi(16),'ge');floatT('+'+tot+gi(16),'#c8a96e');
-    checkAchs();renderInv();updateRes();return;
-  }
-  if(t.id==='btn-sell-rare'){
-    const rs=G.inv.filter(x=>x.quality==='rare');if(!rs.length){showN('Нет редких!');return;}
-    const tot=rs.reduce((s,x)=>s+(parseInt(x.sellPrice)||0),0);
-    openM('⚠️ Продать редкие?',
-      '<div style="font-size:15px;margin-bottom:12px">Продать <b style="color:var(--rare)">'+rs.length+'</b> редких предметов за <span class="gt">'+tot+gi(16)+'</span>?<br>'+
-      '<span style="font-size:13px;color:var(--txt-d)">Это действие необратимо!</span></div>'+
-      '<div style="display:flex;gap:6px">'+
-        '<button class="btn btn-g" id="btn-confirm-sell-rare">'+gi(16)+' Продать</button>'+
-        '<button class="btn btn-r btn-sm" id="btn-close-m">Отмена</button></div>');
-    window._pendingRareSell=rs;return;
-  }
-  if(tId==='btn-confirm-sell-rare'){
-    const rs=window._pendingRareSell||[];const tot=rs.reduce((s,x)=>s+(parseInt(x.sellPrice)||0),0);
-    const ids=new Set(rs.map(x=>x.id));G.inv=G.inv.filter(x=>!ids.has(x.id));
-    G.gold+=tot;G.stats.sg+=tot;G.stats.sold+=rs.length;
-    log(gi(16)+' Продано '+rs.length+'x редких +'+tot+gi(16),'ge');floatT('+'+tot+gi(16),'#f0d060');
-    window._pendingRareSell=null;closeM();checkAchs();renderInv();updateRes();return;
-  }
+
   if(t.id==='btn-dbg-imba'){
     const imba={id:++G.iid,name:'Абсолютная Реликвия',em:'🔱',slot:'weapon',cls:'noble',quality:'unique',tier:16,
       mods:[{stat:'dmgPhys',value:4999},{stat:'dmgSpell',value:4999},{stat:'hp',value:4999},{stat:'armor',value:4999},{stat:'allRes',value:80},{stat:'critChance',value:80}],sellPrice:9999};

@@ -525,8 +525,7 @@ function completeSelfRun(){
       if(G.stats.selfClears===4){
         const _gift=genItem(2,G.selfCls||'warrior');
         G.inv.push(_gift);G.stats.fi++;
-        log('🎁 Первая находка! '+_gift.em+' '+_gift.name+' — за 4-ю пройденную карту','i-'+_gift.quality[0]);
-        showN('🎁 Первая находка: '+_gift.em+' '+_gift.name,'pur');
+        log(_gift.em+' <span style="color:'+qcolLog(_gift.quality)+'">'+_gift.name+'</span> ['+qlbl(_gift.quality)+']','i-'+_gift.quality[0]);
       }
     }
     addXPSelf(xpAmt(tier));

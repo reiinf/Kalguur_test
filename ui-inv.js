@@ -20,6 +20,42 @@ function renderInv(){
       '<span class="isp" style="font-size:13px;color:'+qcol(it.quality)+'">'+it.sellPrice+gi(16)+'</span></div>').join('')+
     '</div>';
   el.innerHTML=html;updateRes();
+  // Кнопка продажи редких: зажать 1с для подтверждения
+  const _rBtn=document.getElementById('btn-sell-rare');
+  if(_rBtn){
+    let _rTimer=null,_rStart=0;
+    const _rBar=document.createElement('span');
+    _rBar.style.cssText='position:absolute;left:0;top:0;height:100%;width:0%;background:#f0d06044;transition:none;pointer-events:none';
+    _rBtn.style.position='relative';_rBtn.style.overflow='hidden';_rBtn.style.userSelect='none';
+    _rBtn.appendChild(_rBar);
+    const _rDur=1000;
+    const _rCancel=()=>{
+      if(_rTimer){cancelAnimationFrame(_rTimer);_rTimer=null;}
+      _rBar.style.width='0%';
+    };
+    const _rTick=()=>{
+      const pct=Math.min(100,(Date.now()-_rStart)/_rDur*100);
+      _rBar.style.width=pct+'%';
+      if(pct>=100){
+        _rTimer=null;
+        const rs2=G.inv.filter(x=>x.quality==='rare');
+        if(!rs2.length){showN('Нет редких!');return;}
+        const tot=rs2.reduce((s,x)=>s+(parseInt(x.sellPrice)||0),0);
+        G.inv=G.inv.filter(x=>x.quality!=='rare');
+        G.gold+=tot;G.stats.sg+=tot;G.stats.sold+=rs2.length;
+        rs2.forEach(it=>checkContractSell(it.quality,parseInt(it.sellPrice)||0));
+        log(gi(16)+' Продано '+rs2.length+'x редких +'+tot+gi(16),'ge');floatT('+'+tot+gi(16),'#f0d060');
+        checkAchs();renderInv();updateRes();
+        return;
+      }
+      _rTimer=requestAnimationFrame(_rTick);
+    };
+    _rBtn.addEventListener('mousedown',()=>{_rStart=Date.now();_rBar.style.width='0%';_rTimer=requestAnimationFrame(_rTick);});
+    _rBtn.addEventListener('mouseup',_rCancel);
+    _rBtn.addEventListener('mouseleave',_rCancel);
+    _rBtn.addEventListener('touchstart',(e)=>{e.preventDefault();_rStart=Date.now();_rBar.style.width='0%';_rTimer=requestAnimationFrame(_rTick);},{passive:false});
+    _rBtn.addEventListener('touchend',_rCancel);
+  }
   // Кнопка продажи уников: зажать 1.5с для подтверждения
   const _uBtn=document.getElementById('btn-sell-unique');
   if(_uBtn){
