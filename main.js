@@ -109,6 +109,7 @@ function init(){
     window._lastTick=now;
     window._tickAccum+=elapsed;
     const _ti=_wasmTickInterval();
+    if(window._tickAccum>_ti*10)window._tickAccum=_ti*10; // макс 10 тиков за раз (~2с)
     while(window._tickAccum>=_ti){window._tickAccum-=_ti;tick();}
     window._rafId=requestAnimationFrame(scheduleTick);
   }

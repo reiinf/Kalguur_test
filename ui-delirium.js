@@ -324,7 +324,6 @@ function sfxAch(){playTone(523,.1,'sine',.18);setTimeout(()=>playTone(659,.1,'si
 // ══════════ TICK ══════════════════════════════════════════════
 function tick(){
   G.gt+=200;  // logical time always +200ms per tick
-  G.playTime=(G.playTime||0)+200;
   // Periodically refresh upgrades panel (for gold-based button availability)
   if(G.gt%3000===0)renderUpgrades();
   // Auto-buy maps for Maraketh
