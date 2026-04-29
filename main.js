@@ -94,8 +94,7 @@ function init(){
     const _now=performance.now();
     const _delta=_now-(window._lastPlayTimeMark||window._sessionStart);
     window._lastPlayTimeMark=_now;
-    const _capped=Math.min(_delta,10000);
-    G.playTime=(G.playTime||0)+_capped;G.runTime=(G.runTime||0)+_capped;
+    if(_delta<10000)G.playTime=(G.playTime||0)+_delta;
   },1000);
   // Ждём загрузки WASM перед запуском тика
   window._lastTick=performance.now();
@@ -110,7 +109,6 @@ function init(){
     window._lastTick=now;
     window._tickAccum+=elapsed;
     const _ti=_wasmTickInterval();
-    if(window._tickAccum>_ti*10)window._tickAccum=_ti*10; // макс 10 тиков за раз (~2с)
     while(window._tickAccum>=_ti){window._tickAccum-=_ti;tick();}
     window._rafId=requestAnimationFrame(scheduleTick);
   }

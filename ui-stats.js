@@ -20,14 +20,10 @@ function updateStats(){
   const el=document.getElementById('stats-p');if(!el)return;
   // Перерисовывать только при реальных изменениях
   const _sk=JSON.stringify([G.stats,G.prestige,G.prestigeBonus,G.bossKills,G.guardianPieces,
-    G.workers&&G.workers.map(w=>w.isNamed),G.selfEq&&G.selfEq.cluster,G.passives,G.voidstones,
-    Math.floor(G.gt/60000)]);
+    G.workers&&G.workers.map(w=>w.isNamed),G.selfEq&&G.selfEq.cluster,G.passives,G.voidstones]);
   if(el._lastStatsKey===_sk)return;
   el._lastStatsKey=_sk;
-  const _fmtHM=ms=>{const m=Math.floor(ms/60000);const h=Math.floor(m/60);return h?h+'ч '+(m%60)+'м':m+'м';};
   el.innerHTML=
-    '<div>⏱ Время возвышения: <span class="gt">'+_fmtHM(G.runTime||0)+'</span></div>'+
-    '<div>📅 Всего в игре: <span class="gt">'+_fmtHM(G.playTime||0)+'</span></div>'+
     '<div>'+gi(16)+' Заработано: <span class="gt">'+fN(G.stats.ge)+'</span></div>'+
     '<div>💎 Продано: <span class="gt">'+G.stats.sold+'шт ('+fN(G.stats.sg)+gi(16)+')</span></div>'+
     '<div>🗺 Карт пройдено: <span class="gt">'+G.stats.mr+'</span></div>'+
