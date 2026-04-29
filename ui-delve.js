@@ -842,7 +842,7 @@ function dvRender(){
   ctx.fillStyle='rgba(0,0,0,0.5)';
   ctx.fillRect(0,0,W,22);
   ctx.fillStyle='#8870cc';
-  ctx.font='bold 11px monospace';
+  ctx.font='bold 14px monospace';
   ctx.textAlign='center';ctx.textBaseline='top';
   ctx.fillText('📍 Глубина: '+dv.depth,W/2,4);
 }
@@ -1161,7 +1161,7 @@ function renderDelve(){
       '<div id="delve-canvas-wrap" style="flex:1;position:relative;background:#070504;border:1px solid #334;border-radius:4px;min-height:'+canvasMinH+';overflow:hidden">'+
         '<canvas id="delve-canvas" style="display:block;width:100%;height:100%"></canvas>'+
         '<div style="position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,0.7))">'+
-          '<div id="delve-result-flash" style="text-align:center;font-size:13px;padding:4px 10px 2px;min-height:20px;opacity:0;transition:opacity 0.3s;background:rgba(0,0,0,0.45);border-radius:4px 4px 0 0"></div>'+
+          '<div id="delve-result-flash" style="text-align:center;font-size:14px;padding:4px 10px 2px;min-height:0;width:fit-content;margin:0 auto;opacity:0;transition:opacity 0.3s;background:rgba(8,5,2,0.70);border:1px solid rgba(120,90,40,0.4);border-radius:4px"></div>'+
           '<div style="padding:6px;display:flex;justify-content:center;align-items:center;gap:10px">'+
             '<div id="delve-go-info" style="font-size:15px"></div>'+
             '<button id="delve-go-btn" class="btn btn-p" onclick="dvGo()" disabled style="opacity:.4;font-size:15px;padding:4px 20px">⛏️ ВПЕРЁД</button>'+
