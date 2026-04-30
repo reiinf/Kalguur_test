@@ -104,6 +104,7 @@ function save(){
     delve:G.delve||null,
     uniqMapData:G.uniqMapData||{},
     playTime:G.playTime||0,
+    catchupMs:G.catchupMs||0,catchupPaused:G.catchupPaused||false,
     _fishCaught:G._fishCaught||0,
     _deliriumMode:G._deliriumMode||false,
     _deliriumModeUnlocked:G._deliriumModeUnlocked||false,
@@ -178,6 +179,8 @@ if(s.v&&s.v>=9){/* compatible enough */}
     if(G.delve.viewMode===undefined||G.delve.viewMode==='full'||G.delve.viewMode==='compact')G.delve.viewMode='map';
     if(G.delve.running&&(!G.delve._runEnd||G.gt>=G.delve._runEnd)){G.delve.running=false;}
     if(!G.playTime)G.playTime=0;
+    if(G.catchupMs===undefined)G.catchupMs=0;
+    if(G.catchupPaused===undefined)G.catchupPaused=false;
     if(G._deliriumMode===undefined)G._deliriumMode=false;
     if(G._deliriumModeUnlocked===undefined)G._deliriumModeUnlocked=false;
     if(G._deliriumModeRewarded===undefined)G._deliriumModeRewarded=false;

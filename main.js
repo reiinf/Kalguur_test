@@ -99,17 +99,60 @@ function init(){
   // Ждём загрузки WASM перед запуском тика
   window._lastTick=performance.now();
   window._tickAccum=0;
+  const _CATCHUP_MAX=1800000; // 30 минут макс
+  const _BASE_TI=200;         // базовый интервал тика мс
+
+  // Накапливаем время при скрытии вкладки
+  document.addEventListener('visibilitychange',()=>{
+    if(document.hidden){
+      window._hiddenAt=Date.now();
+    } else {
+      if(window._hiddenAt){
+        const _away=Date.now()-window._hiddenAt;
+        window._hiddenAt=null;
+        if(_away>500){
+          G.catchupMs=Math.min(_CATCHUP_MAX,(G.catchupMs||0)+_away);
+          _updateCatchupUI();
+        }
+      }
+      window._lastTick=performance.now();
+      window._tickAccum=0;
+    }
+  });
+
+  function _updateCatchupUI(){
+    const el=document.getElementById('catchup-timer');
+    if(!el)return;
+    const ms=G.catchupMs||0;
+    if(ms<=0){el.style.display='none';return;}
+    const sec=Math.ceil(ms/1000);
+    const m=Math.floor(sec/60),s=sec%60;
+    el.style.display='flex';
+    el.querySelector('.catchup-time').textContent=(m>0?m+'м ':'')+s+'с';
+    el.querySelector('.catchup-pause-btn').textContent=G.catchupPaused?'▶':'⏸';
+  }
+  window._updateCatchupUI=_updateCatchupUI;
+
   function scheduleTick(){
     if(!window._wasmLoaded){
       window._rafId=requestAnimationFrame(scheduleTick);
       return;
     }
     const now=performance.now();
-    const elapsed=now-window._lastTick;
+    const elapsed=Math.min(now-window._lastTick,500); // cap: не больше 500мс за кадр
     window._lastTick=now;
     window._tickAccum+=elapsed;
     const _ti=_wasmTickInterval();
-    while(window._tickAccum>=_ti){window._tickAccum-=_ti;tick();}
+    // Если есть накопленное время и не на паузе — тикаем вдвое быстрее
+    const _eff=(_ti>0&&(G.catchupMs||0)>0&&!G.catchupPaused)?_ti/2:_ti;
+    while(window._tickAccum>=_eff){
+      window._tickAccum-=_eff;
+      tick();
+      if((G.catchupMs||0)>0&&!G.catchupPaused){
+        G.catchupMs=Math.max(0,G.catchupMs-_BASE_TI);
+        if(G.catchupMs%2000<_BASE_TI)_updateCatchupUI(); // обновлять UI раз в ~2с
+      }
+    }
     window._rafId=requestAnimationFrame(scheduleTick);
   }
   if(window._rafId)cancelAnimationFrame(window._rafId);

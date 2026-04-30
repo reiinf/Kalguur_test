@@ -9,12 +9,15 @@ function updateRes(){
   const _ro=document.getElementById('ri-del-orbs-ri');if(_ro)_ro.style.display=_d16?'':'none';
   const _rs=document.getElementById('ri-del-spl-ri');if(_rs)_rs.style.display=(_d16||(G.prestige||0)>0)?'flex':'none';
   set('r-del-orbs',G.deliriumOrbs||0);set('r-del-spl',G.deliriumSplinters||0);
+  // Индикатор ускорения
+  if(window._updateCatchupUI)window._updateCatchupUI();
   // Сульфит — только после T5
   const _clearedTiers=Object.keys(G.cleared||{}).map(Number).filter(n=>G.cleared[n]);
   const _maxClr=_clearedTiers.length?Math.max(..._clearedTiers):0;
   const _sul=document.getElementById('ri-sulphite-bar');
   if(_sul)_sul.style.display=_maxClr>=5?'flex':'none';
   set('r-sulphite',(G.delve?G.delve.sulphite:0));
+  if(window._updateCatchupUI)window._updateCatchupUI();
 }
 function updateStats(){
   const el=document.getElementById('stats-p');if(!el)return;
