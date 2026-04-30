@@ -145,14 +145,16 @@ function init(){
     const _ti=_wasmTickInterval();
     // Если есть накопленное время и не на паузе — тикаем вдвое быстрее
     const _eff=(_ti>0&&(G.catchupMs||0)>0&&!G.catchupPaused)?_ti/2:_ti;
+    let _catchupChanged=false;
     while(window._tickAccum>=_eff){
       window._tickAccum-=_eff;
       tick();
       if((G.catchupMs||0)>0&&!G.catchupPaused){
-        G.catchupMs=Math.max(0,G.catchupMs-_BASE_TI);
-        if(G.catchupMs%2000<_BASE_TI)_updateCatchupUI(); // обновлять UI раз в ~2с
+        G.catchupMs=Math.max(0,G.catchupMs-_BASE_TI/2);
+        _catchupChanged=true;
       }
     }
+    if(_catchupChanged)_updateCatchupUI();
     window._rafId=requestAnimationFrame(scheduleTick);
   }
   if(window._rafId)cancelAnimationFrame(window._rafId);
