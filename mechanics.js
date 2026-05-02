@@ -1476,7 +1476,7 @@ function claimContract(cid){
   G.stats.contractsDone=(G.stats.contractsDone||0)+1;
   if(con.type&&con.type.startsWith('master_'))G.stats.mastersDone=(G.stats.mastersDone||0)+1;
   const r=con.reward||{};
-  if(r.gold){G.gold+=r.gold;G.stats.ge+=r.gold;floatT('+'+r.gold+gi(16),'#f0d080');log(gi(16)+' Получено: '+con.nm+' +'+r.gold+gi(16),'ge');showN('+'+r.gold+gi(16),'pur');}
+  if(r.gold){G.gold+=r.gold;G.stats.ge+=r.gold;floatT('+'+r.gold+gi(16),'#f0d080');log(gi(16)+' Получено: '+con.nm+' +'+r.gold+gi(16),'ge');sfxGold();}
   if(r.item){const it=genItem(Math.max(1,G.maxTier-2),G.selfCls||'warrior');G.inv.push(it);log('📦 Получен предмет: '+it.em+' '+it.name,'i-'+it.quality[0]);}
   updateRes();save();renderContracts();
 }

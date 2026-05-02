@@ -46,8 +46,8 @@ const WCLS_GENDER={warrior:'m', mage:'f', ranger:'f', noble:'f'};
 function randName(cls){const g=WCLS_GENDER[cls]||'f';return g==='m'?WNAMES_M[Math.floor(Math.random()*WNAMES_M.length)]:WNAMES_F[Math.floor(Math.random()*WNAMES_F.length)];}
 const ACTS=[
   {id:'a1',nm:'Акт 1: Зона новичков',em:'🏕',time:5, g:[3,8],   xp:40},
-  {id:'a2',nm:'Акт 2: Лагерь бродяг',em:'🌄',time:10,g:[6,14],  xp:55},
-  {id:'a3',nm:'Акт 3: Поля сражений',em:'🗡️',time:17,g:[10,22], xp:70},
+  {id:'a2',nm:'Акт 2: Лагерь бродяг',em:'🌄',time:12,g:[8,18],  xp:95},
+  {id:'a3',nm:'Акт 3: Поля сражений',em:'🗡️',time:17,g:[10,22], xp:130},
 ];
 const WLVLS=[0,70,150,230,700,1500,3000,5500,9000,14000,21000];
 const SLOTS=['weapon','armor','helmet','ring','cluster'];
