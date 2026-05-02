@@ -304,7 +304,9 @@ function resolveMasterContract(id){
 
 
 // ══════════ AUDIO ══════════════════════════════════════════════
+function getVolMult(){return parseFloat(localStorage.getItem('kalguur_volume')||'1');}
 function playTone(freq,dur,type,vol){
+  vol=vol*getVolMult();if(vol<=0)return;
   try{
     const ctx=window._aC||(window._aC=new(window.AudioContext||window.webkitAudioContext)());
     const o=ctx.createOscillator(),g=ctx.createGain();

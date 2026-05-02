@@ -100,7 +100,19 @@ function doImportSave(){
 
 function openSettings(){
   const cur=parseInt(localStorage.getItem('kalguur_fontOffset')||'0');
+  const vol=parseFloat(localStorage.getItem('kalguur_volume')||'1');
+  const volPct=Math.round(vol*100);
   openM('⚙ НАСТРОЙКИ',
+    '<div style="margin-bottom:16px">'+
+    '<div style="font-size:13px;color:var(--txt-b);margin-bottom:8px">Громкость звука</div>'+
+    '<div style="display:flex;align-items:center;gap:10px">'+
+    '<span style="font-size:13px;color:var(--txt-d)">🔇</span>'+
+    '<input type="range" id="vol-slider" min="0" max="100" step="5" value="'+volPct+'" style="flex:1;accent-color:var(--gold)">'+
+    '<span style="font-size:13px;color:var(--txt-d)">🔊</span>'+
+    '</div>'+
+    '<div style="font-size:12px;color:var(--txt-d);margin-top:6px;text-align:center" id="vol-slider-label">'+(volPct===0?'Выключен':volPct+'%')+'</div>'+
+    '</div>'+
+    '<div style="border-top:1px solid var(--brd-g);margin:16px 0"></div>'+
     '<div style="margin-bottom:16px">'+
     '<div style="font-size:13px;color:var(--txt-b);margin-bottom:8px">Размер шрифта</div>'+
     '<div style="display:flex;align-items:center;gap:10px">'+
@@ -113,6 +125,13 @@ function openSettings(){
     '<div style="border-top:1px solid var(--brd-g);margin:16px 0 12px"></div>'+
     '<div style="font-size:13px;color:#cc4444;margin-bottom:8px">⚠ ОПАСНО</div>'+
     '<button onclick="closeM();confirmReset()" style="width:100%;background:linear-gradient(180deg,rgba(160,40,40,.25),rgba(160,40,40,.05));border:1px solid #663333;color:#cc6666;font-size:12px;font-family:\'Cinzel\',serif;padding:7px;cursor:pointer;clip-path:polygon(5px 0,100% 0,calc(100% - 5px) 100%,0 100%)">💀 НАЧАТЬ ЗАНОВО</button>');
+  const vsl=document.getElementById('vol-slider');
+  const vlb=document.getElementById('vol-slider-label');
+  if(vsl){vsl.addEventListener('input',()=>{
+    const v=parseInt(vsl.value);
+    vlb.textContent=v===0?'Выключен':v+'%';
+    localStorage.setItem('kalguur_volume',(v/100).toFixed(2));
+  });}
   const sl=document.getElementById('font-slider');
   const lb=document.getElementById('font-slider-label');
   if(sl){sl.addEventListener('input',()=>{

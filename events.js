@@ -136,7 +136,8 @@ document.addEventListener('click',function(e){
   // Boss is now handled via map card click
   if(t.id==='btn-prestige'||t.id==='btn-prestige-bar'){doPrestige();return;}
   if(t.dataset.facTab){openFactionChoice(t.dataset.facTab);return;}
-  const _claimId=t.dataset.claimId;if(_claimId){claimContract(_claimId);return;}
+  const _claimEl=t.dataset.claimId?t:(t.closest?t.closest('[data-claim-id]'):null);
+  if(_claimEl&&_claimEl.dataset.claimId){claimContract(_claimEl.dataset.claimId);return;}
   const _passId=t.dataset.passiveId;if(_passId){buyPassive(_passId);return;}
   const facPick=t.closest('[data-faction-pick]');
   if(facPick){confirmPrestige(facPick.dataset.factionPick);return;}

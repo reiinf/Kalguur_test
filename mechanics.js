@@ -453,7 +453,7 @@ function completeSelfRun(){
   if(!G.stats.tierRuns)G.stats.tierRuns={};
   G.stats.tierRuns[tier]=(G.stats.tierRuns[tier]||0)+1;
   if(!ok&&G._deliriumMode){G.deliriumSplinters=Math.max(0,(G.deliriumSplinters||0)-5);if(G.deliriumSplinters<=0){log('💀 Осколки иссякли — карты заблокированы. Иди в Симулякр!','ev');showN('💀 Осколки кончились — нужно 5 для продолжения','red');}save();}
-  G.selfRun=null;resetRunUI();_mc_stop();G.selMapVariant=null;checkContractRun(tier,ok?'ok':'fail');
+  G.selfRun=null;resetRunUI();_mc_stop();G.selMapVariant=null;checkContractRun(tier,ok?'ok':'fail',isGrd);
   if(ok){
     const lm=cursed?3:uniq?2:1;
     if(!isGrd&&!isBoss){G.cleared[tier]=true;if(tier>G.maxTier)G.maxTier=tier;dvUpdateMinDepth(tier);}
@@ -1422,7 +1422,7 @@ function tickContracts(){
   if(!hasSyndFeature())return;
   G.contractRunsDone=(G.contractRunsDone||0);
 }
-function checkContractRun(tier,result){
+function checkContractRun(tier,result,isGrd){
   // result: 'ok'|'injured'|'captured'
   if(!hasSyndFeature())return;
   G.contractRunsDone=(G.contractRunsDone||0)+1;
@@ -1433,7 +1433,7 @@ function checkContractRun(tier,result){
       if(result==='ok'){con.curStreak=(con.curStreak||0)+1;con.progress=Math.min(con.need,con.curStreak);}
       else{con.curStreak=0;con.progress=0;}
     }
-    if(con.type==='run_grd'&&tier>=16&&result==='ok'){con.progress=Math.min(con.need,con.progress+1);}
+    if(con.type==='run_grd'&&isGrd&&result==='ok'){con.progress=Math.min(con.need,con.progress+1);}
     if(con.progress>=con.need)completeContract(con);
   });
   // Refresh contracts every 5 runs
@@ -1466,7 +1466,7 @@ function checkContractFind(quality){
 function completeContract(con){
   if(con.done)return;con.done=true;con.needsClaim=true;
   sfxContract();
-  showN('📋 '+con.nm+' выполнен! Нажмите Получить','pur');
+  showN('📋 Контракт выполнен: '+con.nm+' — Нажмите Получить','con');
   log('📋 Контракт выполнен: '+con.nm,'info');
   renderContracts();save();
 }
